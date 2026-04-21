@@ -37,6 +37,18 @@ majormate-server/src/main/resources/application-secret.yaml
 Thumbs.db
 
 # ──────────────────────────────────────────
+# Node / React Native / Expo
+# ──────────────────────────────────────────
+node_modules/
+.expo/
+dist/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# ──────────────────────────────────────────
 # Logs & temp
 # ──────────────────────────────────────────
 *.log
