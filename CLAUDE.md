@@ -18,13 +18,13 @@ To run a single test class:
 
 ## Architecture
 
-**MajorMate** is a global study platform that connects users by academic major, featuring real-time study tracking and gamification. The server is a Spring Boot 4.0.5 application with Java 21.
+**MajorMate** is a global study platform that connects users by academic major, featuring real-time study tracking and gamification. The server is a Spring Boot 3.3.4 application with Java 21.
 
 ### Tech Stack
 
 | Concern | Technology |
 |---|---|
-| Framework | Spring Boot 4.0.5, Spring MVC |
+| Framework | Spring Boot 3.3.4, Spring MVC |
 | Auth | Spring Security + OAuth2 (Google) |
 | Persistence | Spring Data JPA + PostgreSQL |
 | Dynamic queries | QueryDSL |
@@ -59,6 +59,29 @@ To run a single test class:
 - Sensitive file types that must always be ignored: `.env`, `.env.*` (except `.env.example`), `application-local.yaml`, `application-secret.yaml`, `credentials.json`, `service-account*.json`, `*.secret`.
 - When adding a new secret-bearing config file, update `.gitignore` first, then create the file.
 - If asked to help set up a new integration that requires secrets (OAuth, DB, cloud provider, etc.), always provide an `.env.example` template with placeholder values — never the real values.
+
+### Manual Intervention Policy
+
+When a task requires action that only the user can perform, **stop and present a clear proposal** before proceeding. Do not attempt to work around it or guess at credentials.
+
+Situations that require pausing and asking the user:
+
+- **Secrets / credentials** — Google OAuth Client ID/Secret, API keys, DB passwords, JWT secrets, cloud service account keys. Provide an `.env.example` template and ask the user to fill in the real values.
+- **External service setup** — Registering OAuth redirect URIs in Google Cloud Console, enabling APIs, creating cloud resources.
+- **Infrastructure that must be manually started** — Docker Desktop not running, VPN required, etc.
+- **Schema or data migrations with destructive risk** — Any migration that drops tables or columns, or that is irreversible without a backup.
+- **Third-party account actions** — Sending emails, posting to social platforms, publishing to app stores.
+
+**Format for the pause:**
+```
+⏸ Manual step required: <one-line summary>
+
+What to do:
+1. <step>
+2. <step>
+
+Once done, reply "계속" (or describe the result) and I will continue.
+```
 
 ### Key Reference Docs
 
