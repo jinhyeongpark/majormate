@@ -48,6 +48,11 @@ To run a single test class:
 - Entry point: `src/main/java/me/majormate/MajormateServerApplication.java`
 - Application config: `src/main/resources/application.yaml`
 
+### Branch Policy
+
+- **기본 작업 브랜치는 `dev`** — 모든 작업은 `dev`로 push하고 `main`에는 직접 push하지 않는다.
+- `main` ← PR (dev) 방식으로만 병합.
+
 ### Git & Secrets Policy
 
 - **Never commit secrets.** Before creating any file that contains credentials, API keys, or tokens, check that it is covered by `.gitignore` at the repo root.
