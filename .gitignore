@@ -1,0 +1,44 @@
+# ──────────────────────────────────────────
+# Secrets & credentials — NEVER commit these
+# ──────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.secret
+secrets/
+credentials.json
+service-account*.json
+
+# Spring Boot local overrides with real secrets
+majormate-server/src/main/resources/application-local.yaml
+majormate-server/src/main/resources/application-secret.yaml
+
+# ──────────────────────────────────────────
+# Build output
+# ──────────────────────────────────────────
+**/build/
+**/target/
+**/.gradle/
+!**/gradle/wrapper/gradle-wrapper.jar
+
+# ──────────────────────────────────────────
+# IDEs
+# ──────────────────────────────────────────
+.idea/
+*.iml
+.vscode/
+*.suo
+*.user
+
+# ──────────────────────────────────────────
+# OS noise
+# ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ──────────────────────────────────────────
+# Logs & temp
+# ──────────────────────────────────────────
+*.log
+*.tmp
+*.pid
