@@ -15,7 +15,8 @@
     { "name": "Friend",    "description": "친구 코드 & 네트워킹" },
     { "name": "Room",      "description": "전공방 & 커스텀 스터디룸" },
     { "name": "Session",   "description": "스톱워치 세션" },
-    { "name": "Stats",     "description": "학습 통계" }
+    { "name": "Stats",     "description": "학습 통계" },
+    { "name": "Admin",     "description": "관리자 전용 API" }
   ],
   "paths": {
     "/api/auth/me": {
@@ -141,6 +142,84 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FriendResponse" } } }
           },
           "404": { "description": "존재하지 않는 친구 코드" }
+        }
+      }
+    },
+    "/api/character-items": {
+      "get": {
+        "tags": ["Character"],
+        "summary": "캐릭터 아이템 목록 조회",
+        "operationId": "getItems",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "description": "카테고리 필터 (없으면 전체)",
+            "schema": { "$ref": "#/components/schemas/ItemCategory" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "아이템 목록",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/CharacterItemResponse" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/character-items": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "캐릭터 아이템 등록 (Admin)",
+        "operationId": "createItem",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CharacterItemRequest" } } }
+        },
+        "responses": {
+          "201": {
+            "description": "등록된 아이템",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CharacterItemResponse" } } }
+          },
+          "403": { "description": "관리자 권한 없음" }
+        }
+      }
+    },
+    "/api/admin/character-items/{id}": {
+      "put": {
+        "tags": ["Admin"],
+        "summary": "캐릭터 아이템 수정 (Admin)",
+        "operationId": "updateItem",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CharacterItemRequest" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "수정된 아이템",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CharacterItemResponse" } } }
+          },
+          "403": { "description": "관리자 권한 없음" },
+          "404": { "description": "아이템 없음" }
+        }
+      },
+      "delete": {
+        "tags": ["Admin"],
+        "summary": "캐릭터 아이템 삭제 (Admin)",
+        "operationId": "deleteItem",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "204": { "description": "삭제 성공" },
+          "403": { "description": "관리자 권한 없음" },
+          "404": { "description": "아이템 없음" }
         }
       }
     },
@@ -318,25 +397,53 @@
       },
       "CharacterResponse": {
         "type": "object",
-        "description": "레이어 순서: base → bottom → top → shoes → hair → accessories",
+        "description": "레이어 순서: bottom → top → shoes → hair → bag/glasses/item",
         "properties": {
-          "base":        { "type": "string", "nullable": true },
-          "bottom":      { "type": "string", "nullable": true },
-          "top":         { "type": "string", "nullable": true },
-          "shoes":       { "type": "string", "nullable": true },
-          "hair":        { "type": "string", "nullable": true },
-          "accessories": { "type": "string", "nullable": true }
+          "gender":   { "type": "string", "nullable": true },
+          "bottom":   { "type": "string", "nullable": true },
+          "top":      { "type": "string", "nullable": true },
+          "shoes":    { "type": "string", "nullable": true },
+          "hair":     { "type": "string", "nullable": true },
+          "bag":      { "type": "string", "nullable": true },
+          "glasses":  { "type": "string", "nullable": true },
+          "item":     { "type": "string", "nullable": true }
         }
       },
       "CharacterUpdateRequest": {
         "type": "object",
         "properties": {
-          "base":        { "type": "string", "nullable": true },
-          "bottom":      { "type": "string", "nullable": true },
-          "top":         { "type": "string", "nullable": true },
-          "shoes":       { "type": "string", "nullable": true },
-          "hair":        { "type": "string", "nullable": true },
-          "accessories": { "type": "string", "nullable": true }
+          "gender":   { "type": "string", "nullable": true },
+          "bottom":   { "type": "string", "nullable": true },
+          "top":      { "type": "string", "nullable": true },
+          "shoes":    { "type": "string", "nullable": true },
+          "hair":     { "type": "string", "nullable": true },
+          "bag":      { "type": "string", "nullable": true },
+          "glasses":  { "type": "string", "nullable": true },
+          "item":     { "type": "string", "nullable": true }
+        }
+      },
+      "ItemCategory": {
+        "type": "string",
+        "enum": ["BOTTOM", "TOP", "SHOES", "HAIR", "BAG", "GLASSES", "ITEM"]
+      },
+      "CharacterItemRequest": {
+        "type": "object",
+        "required": ["category", "name", "price", "filePath"],
+        "properties": {
+          "category": { "$ref": "#/components/schemas/ItemCategory" },
+          "name":     { "type": "string" },
+          "price":    { "type": "integer" },
+          "filePath": { "type": "string" }
+        }
+      },
+      "CharacterItemResponse": {
+        "type": "object",
+        "properties": {
+          "id":       { "type": "string", "format": "uuid" },
+          "category": { "$ref": "#/components/schemas/ItemCategory" },
+          "name":     { "type": "string" },
+          "price":    { "type": "integer" },
+          "filePath": { "type": "string" }
         }
       },
       "FriendCodeResponse": {

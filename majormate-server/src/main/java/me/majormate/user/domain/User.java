@@ -38,6 +38,11 @@ public class User {
     @Column(unique = true, length = 8)
     private String friendCode;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private UserRole role = UserRole.USER;
+
     public static User ofOAuth2(String email, String name) {
         return User.builder()
                 .email(email)

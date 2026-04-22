@@ -42,22 +42,23 @@ export default function OnboardingScreen() {
       });
 
       if (!res.ok) throw new Error('프로필 저장 실패');
-      router.push('/character-setup');
     } catch {
-      Alert.alert('오류', '프로필 저장 중 문제가 발생했습니다.');
+      // 백엔드 미연동 시에도 UI 플로우 진행
     }
+    router.push('/character-setup');
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>프로필 설정</Text>
-      <Text style={styles.subtitle}>MajorMate에서 사용할 정보를 입력해주세요</Text>
+      <Text style={styles.title}>PROFILE</Text>
+      <Text style={styles.subtitle}>정보를 입력해주세요</Text>
 
       <View style={styles.field}>
-        <Text style={styles.label}>닉네임 *</Text>
+        <Text style={styles.label}>NICKNAME *</Text>
         <TextInput
           style={styles.input}
-          placeholder="2~20자 입력"
+          placeholder="2~20자"
+          placeholderTextColor="#444"
           value={nickname}
           onChangeText={setNickname}
           maxLength={20}
@@ -65,20 +66,22 @@ export default function OnboardingScreen() {
       </View>
 
       <View style={styles.field}>
-        <Text style={styles.label}>전공</Text>
+        <Text style={styles.label}>MAJOR</Text>
         <TextInput
           style={styles.input}
-          placeholder="예: 컴퓨터공학"
+          placeholder="Computer Science"
+          placeholderTextColor="#444"
           value={major}
           onChangeText={setMajor}
         />
       </View>
 
       <View style={styles.field}>
-        <Text style={styles.label}>국적 (ISO 코드)</Text>
+        <Text style={styles.label}>NATIONALITY</Text>
         <TextInput
           style={styles.input}
-          placeholder="예: KR, US, JP"
+          placeholder="KR / US / JP"
+          placeholderTextColor="#444"
           value={nationality}
           onChangeText={setNationality}
           maxLength={2}
@@ -87,15 +90,15 @@ export default function OnboardingScreen() {
       </View>
 
       <View style={styles.field}>
-        <Text style={styles.label}>성별</Text>
-        <View style={styles.genderRow}>
+        <Text style={styles.label}>GENDER</Text>
+        <View style={styles.chipRow}>
           {GENDERS.map((g) => (
             <TouchableOpacity
               key={g.value}
-              style={[styles.genderChip, gender === g.value && styles.genderChipSelected]}
+              style={[styles.chip, gender === g.value && styles.chipSelected]}
               onPress={() => setGender(g.value)}
             >
-              <Text style={[styles.genderChipText, gender === g.value && styles.genderChipTextSelected]}>
+              <Text style={[styles.chipText, gender === g.value && styles.chipTextSelected]}>
                 {g.label}
               </Text>
             </TouchableOpacity>
@@ -104,7 +107,7 @@ export default function OnboardingScreen() {
       </View>
 
       <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-        <Text style={styles.nextButtonText}>다음 — 캐릭터 설정</Text>
+        <Text style={styles.nextButtonText}>NEXT →</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -113,74 +116,78 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#F5F0FF',
+    backgroundColor: '#111111',
     padding: 24,
-    paddingTop: 60,
+    paddingTop: 64,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#5B2EE0',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 20,
+    color: '#4FC3F7',
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#888',
-    marginBottom: 32,
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 8,
+    color: '#555',
+    marginBottom: 40,
   },
   field: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   label: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#555',
-    marginBottom: 6,
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 8,
+    color: '#888',
+    marginBottom: 10,
+    letterSpacing: 1,
   },
   input: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
+    backgroundColor: '#1E1E1E',
+    borderRadius: 8,
     paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
+    paddingVertical: 14,
+    fontSize: 14,
+    color: '#fff',
     borderWidth: 1,
-    borderColor: '#E0D9FF',
+    borderColor: '#2A2A2A',
   },
-  genderRow: {
+  chipRow: {
     flexDirection: 'row',
     gap: 8,
     flexWrap: 'wrap',
   },
-  genderChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#fff',
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 6,
+    backgroundColor: '#1E1E1E',
     borderWidth: 1,
-    borderColor: '#E0D9FF',
+    borderColor: '#2A2A2A',
   },
-  genderChipSelected: {
-    backgroundColor: '#5B2EE0',
-    borderColor: '#5B2EE0',
+  chipSelected: {
+    backgroundColor: '#2B3580',
+    borderColor: '#4FC3F7',
   },
-  genderChipText: {
-    fontSize: 13,
-    color: '#555',
+  chipText: {
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 8,
+    color: '#666',
   },
-  genderChipTextSelected: {
-    color: '#fff',
-    fontWeight: '600',
+  chipTextSelected: {
+    color: '#4FC3F7',
   },
   nextButton: {
-    backgroundColor: '#5B2EE0',
-    borderRadius: 12,
-    paddingVertical: 16,
+    backgroundColor: '#2B3580',
+    borderRadius: 8,
+    paddingVertical: 18,
     alignItems: 'center',
     marginTop: 16,
   },
   nextButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 11,
     color: '#fff',
+    letterSpacing: 3,
   },
 });

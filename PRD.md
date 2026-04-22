@@ -29,6 +29,9 @@
 * **Profile Data:** 국적(국기 표시), 전공, 닉네임, 성별(선택).
 * **Character System (Layered):** * 픽셀 아트 기반의 레이어 시스템 구조.
     * **Layer Order:** Base -> Bottom -> Top -> Shoes -> Hair -> Accessories.
+* **Character Item Management (Admin):** 
+    * 각 아이템은 고유 ID, 종류(카테고리), 이름, 가격, PNG 파일 경로 등의 메타데이터를 가짐.
+    * 서버측 관리자(Admin)가 새로운 캐릭터 아이템을 등록(POST)하고 관리할 수 있는 시스템.
 * **Accessories:** 노트북, 커피, 태블릿, 연필 등 전공 특화 아이템.
 * **Networking:** * 개인 코드(Friend Code) 기반 친구 추가 시스템.
     * 친구 그룹 기능을 통해 타 전공 친구의 상태도 실시간 확인 가능.
