@@ -1,3 +1,4 @@
+import { AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -5,17 +6,16 @@ export default function LoginScreen() {
   const router = useRouter();
 
   const handleGoogleLogin = () => {
-    // OAuth flow: redirects to backend /oauth2/authorization/google
-    // After success, backend redirects to /api/auth/me
-    // The app then navigates to onboarding if profile is incomplete
     router.push('/onboarding');
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.logo}>MajorMate</Text>
-      <Text style={styles.tagline}>전공으로 연결되는 공부 플랫폼</Text>
+      <Text style={styles.tagline}>전공으로 연결되는{'\n'}공부 플랫폼</Text>
+
       <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
+        <AntDesign name="google" size={18} color="#fff" />
         <Text style={styles.googleButtonText}>Google로 시작하기</Text>
       </TouchableOpacity>
     </View>
@@ -25,35 +25,40 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F0FF',
+    backgroundColor: '#111111',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 16,
+    gap: 20,
+    paddingHorizontal: 32,
   },
   logo: {
-    fontSize: 36,
-    fontWeight: '800',
-    color: '#5B2EE0',
-    letterSpacing: 1,
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 22,
+    color: '#4FC3F7',
+    letterSpacing: 2,
+    marginBottom: 8,
   },
   tagline: {
-    fontSize: 14,
-    color: '#888',
-    marginBottom: 32,
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 9,
+    color: '#555',
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 40,
   },
   googleButton: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#2B3580',
+    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 28,
   },
   googleButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#333',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 9,
+    color: '#fff',
+    letterSpacing: 1,
   },
 });

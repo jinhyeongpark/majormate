@@ -14,13 +14,13 @@ import { API_BASE_URL } from '../constants/api';
 const LAYER_ORDER: LayerKey[] = ['bottom', 'top', 'shoes', 'hair', 'bag', 'glasses', 'item'];
 
 const LAYER_LABELS: Record<LayerKey, string> = {
-  bottom: '하의',
-  top: '상의',
-  shoes: '신발',
-  hair: '헤어',
-  bag: '가방',
-  glasses: '안경',
-  item: '아이템',
+  bottom: 'BOTTOM',
+  top: 'TOP',
+  shoes: 'SHOES',
+  hair: 'HAIR',
+  bag: 'BAG',
+  glasses: 'GLASSES',
+  item: 'ITEM',
 };
 
 const ITEM_COUNT = 8;
@@ -40,8 +40,8 @@ const LAYER_OPTIONS: Record<LayerKey, string[]> = {
 };
 
 const GENDERS: { label: string; value: CharacterGender }[] = [
-  { label: '남성', value: 'male' },
-  { label: '여성', value: 'female' },
+  { label: 'MALE', value: 'male' },
+  { label: 'FEMALE', value: 'female' },
 ];
 
 export default function CharacterSetupScreen() {
@@ -75,27 +75,27 @@ export default function CharacterSetupScreen() {
         body: JSON.stringify(layers),
       });
       if (!res.ok) throw new Error();
-      router.replace('/(tabs)');
     } catch {
-      Alert.alert('오류', '캐릭터 저장 중 문제가 발생했습니다.');
+      // 백엔드 미연동 시에도 UI 플로우 진행
     } finally {
       setSaving(false);
     }
+    router.replace('/(tabs)');
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>캐릭터 설정</Text>
-      <Text style={styles.subtitle}>나만의 픽셀 아트 캐릭터를 꾸며보세요</Text>
+      <Text style={styles.title}>CHARACTER</Text>
+      <Text style={styles.subtitle}>캐릭터를 꾸며보세요</Text>
 
       {/* Preview */}
       <View style={styles.previewBox}>
         <CharacterRenderer layers={layers} size={180} />
       </View>
 
-      {/* Gender selector */}
+      {/* Gender */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>성별</Text>
+        <Text style={styles.sectionLabel}>GENDER</Text>
         <View style={styles.row}>
           {GENDERS.map((g) => (
             <TouchableOpacity
@@ -117,12 +117,11 @@ export default function CharacterSetupScreen() {
           <Text style={styles.sectionLabel}>{LAYER_LABELS[layerKey]}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.row}>
-              {/* 없음 chip */}
               <TouchableOpacity
                 style={[styles.chip, !layers[layerKey] && styles.chipSelected]}
                 onPress={() => setLayers((prev) => ({ ...prev, [layerKey]: null }))}
               >
-                <Text style={[styles.chipText, !layers[layerKey] && styles.chipTextSelected]}>없음</Text>
+                <Text style={[styles.chipText, !layers[layerKey] && styles.chipTextSelected]}>NONE</Text>
               </TouchableOpacity>
               {LAYER_OPTIONS[layerKey].map((opt) => (
                 <TouchableOpacity
@@ -141,11 +140,11 @@ export default function CharacterSetupScreen() {
       ))}
 
       <TouchableOpacity
-        style={[styles.saveButton, saving && { opacity: 0.6 }]}
+        style={[styles.saveButton, saving && { opacity: 0.5 }]}
         onPress={handleSave}
         disabled={saving}
       >
-        <Text style={styles.saveButtonText}>{saving ? '저장 중...' : '완료 — 공부 시작하기'}</Text>
+        <Text style={styles.saveButtonText}>{saving ? 'SAVING...' : 'START >'}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -154,41 +153,41 @@ export default function CharacterSetupScreen() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#F5F0FF',
+    backgroundColor: '#111111',
     padding: 24,
-    paddingTop: 60,
+    paddingTop: 64,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#5B2EE0',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 20,
+    color: '#4FC3F7',
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#888',
-    marginBottom: 24,
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 8,
+    color: '#555',
+    marginBottom: 28,
   },
   previewBox: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 20,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
     padding: 24,
-    marginBottom: 24,
-    shadowColor: '#5B2EE0',
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    marginBottom: 28,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
   },
   section: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   sectionLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#555',
-    marginBottom: 8,
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 8,
+    color: '#888',
+    marginBottom: 10,
+    letterSpacing: 1,
   },
   row: {
     flexDirection: 'row',
@@ -197,34 +196,36 @@ const styles = StyleSheet.create({
   },
   chip: {
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#fff',
+    paddingVertical: 10,
+    borderRadius: 6,
+    backgroundColor: '#1E1E1E',
     borderWidth: 1,
-    borderColor: '#E0D9FF',
+    borderColor: '#2A2A2A',
   },
   chipSelected: {
-    backgroundColor: '#5B2EE0',
-    borderColor: '#5B2EE0',
+    backgroundColor: '#2B3580',
+    borderColor: '#4FC3F7',
   },
   chipText: {
-    fontSize: 13,
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 8,
     color: '#555',
   },
   chipTextSelected: {
-    color: '#fff',
-    fontWeight: '600',
+    color: '#4FC3F7',
   },
   saveButton: {
-    backgroundColor: '#5B2EE0',
-    borderRadius: 12,
-    paddingVertical: 16,
+    backgroundColor: '#2B3580',
+    borderRadius: 8,
+    paddingVertical: 18,
     alignItems: 'center',
     marginTop: 16,
+    marginBottom: 40,
   },
   saveButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 11,
     color: '#fff',
+    letterSpacing: 3,
   },
 });
