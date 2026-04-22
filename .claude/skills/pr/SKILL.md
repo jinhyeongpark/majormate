@@ -77,7 +77,13 @@ Never force-push without explicit user instruction.
 
 ## Step 5 — Create Pull Request
 
-Use `gh pr create` targeting `main` from `dev`:
+Before creating, check if a PR for `dev` already exists:
+```bash
+gh pr list --state open --head dev
+```
+If one exists, skip `gh pr create` — the pushed commits are already included. Return the existing PR URL.
+
+If no open PR exists, use `gh pr create` targeting `main` from `dev`:
 
 ```bash
 gh pr create --base main --head dev --title "<title>" --body "$(cat <<'EOF'
@@ -92,7 +98,19 @@ EOF
 )"
 ```
 
-- Keep the title under 70 characters.
+### PR Title Format
+
+This repo uses `Phase N: <한국어 설명>` — **not** the commit-style `type(scope):` prefix.
+
+```
+Phase N: <변경 내용을 한국어로 간결하게>
+```
+
+- `N` = implementation_plan.md 기준 현재 Phase 번호. 확인이 필요하면 `gh pr list --state all` 로 이전 PR 번호를 참고한다.
+- 설명은 한국어, 구체적으로, 70자 이내
+- 예: `Phase 3: monorepo CLAUDE.md 분리 및 sync-openapi skill 추가`
+
+### Body
 - Summary: 2–4 bullets covering what changed and why.
 - Test plan: concrete checkboxes the reviewer can verify.
 - Return the PR URL to the user when done.
