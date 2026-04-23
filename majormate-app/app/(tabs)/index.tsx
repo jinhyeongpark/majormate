@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Image,
   Pressable,
@@ -8,48 +8,84 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import CharacterRenderer, { CharacterLayers } from '../../components/CharacterRenderer';
+import FriendsPanel from '../../components/FriendsPanel';
+import RoomsPanel from '../../components/RoomsPanel';
+import RoomView from '../../components/RoomView';
+import { API_BASE_URL } from '../../constants/api';
+import { RoomSummary } from '../../src/api/rooms';
+import { formatElapsed, useStopwatch } from '../../src/hooks/useStopwatch';
 
 const ICON_GROUPS = require('../../assets/icons/groups_icon.png');
 const ICON_ADD_FRIEND = require('../../assets/icons/add_friend_icon.png');
-import CharacterRenderer, { CharacterLayers } from '../../components/CharacterRenderer';
-import FriendsPanel from '../../components/FriendsPanel';
+const BTN_STOP = require('../../assets/icons/stop_button.png');
+const BTN_END = require('../../assets/icons/end_button.png');
 
-type Panel = 'none' | 'friends';
+type Panel = 'none' | 'friends' | 'rooms' | 'room';
 
-const DEFAULT_CHARACTER: CharacterLayers = {
-  gender: 'male',
-  top: 'top_01',
-  bottom: 'bottom_01',
-  shoes: 'shoes_01',
-  hair: 'hair_01',
+const SPEECH: Record<string, string> = {
+  idle: 'keep studying bro',
+  running: 'wanna quit, uh?',
+  paused: 'take a break!',
 };
-
-const SPEECH_IDLE = 'keep studying bro';
 
 export default function HomeScreen() {
   const [panel, setPanel] = useState<Panel>('none');
+  const [currentRoom, setCurrentRoom] = useState<RoomSummary | null>(null);
+  const [character, setCharacter] = useState<CharacterLayers>({ gender: 'male' });
   const insets = useSafeAreaInsets();
+  const stopwatch = useStopwatch();
+
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/users/me/character`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((data) => setCharacter(data))
+      .catch(() => {});
+  }, []);
+
+  const toggleOverlay = (target: 'friends' | 'rooms') => {
+    if (panel === 'room') return;
+    setPanel((p) => (p === target ? 'none' : target));
+  };
+
+  const handleEnterRoom = (room: RoomSummary) => {
+    setCurrentRoom(room);
+    setPanel('room');
+  };
+
+  const handleLeaveRoom = () => {
+    setCurrentRoom(null);
+    setPanel('none');
+  };
+
+  const handleStop = () => {
+    if (stopwatch.status === 'running') {
+      stopwatch.pause();
+    } else {
+      stopwatch.resume();
+    }
+  };
 
   return (
     <View style={styles.root}>
       {/* Top bar */}
       <View style={[styles.topBar, { paddingTop: insets.top + 12 }]}>
-        <TouchableOpacity onPress={() => setPanel((p) => (p === 'friends' ? 'none' : 'friends'))} hitSlop={12}>
+        <TouchableOpacity onPress={() => toggleOverlay('rooms')} hitSlop={12}>
           <Image source={ICON_GROUPS} style={styles.topIcon} resizeMode="contain" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setPanel((p) => (p === 'friends' ? 'none' : 'friends'))} hitSlop={12}>
+        <TouchableOpacity onPress={() => toggleOverlay('friends')} hitSlop={12}>
           <Image source={ICON_ADD_FRIEND} style={styles.topIcon} resizeMode="contain" />
         </TouchableOpacity>
       </View>
 
-      {/* Stopwatch */}
+      {/* Stopwatch display */}
       <View style={styles.clockRow}>
         <Text style={styles.clock} numberOfLines={1} adjustsFontSizeToFit>
-          00 : 00 . 00
+          {formatElapsed(stopwatch.elapsedMs)}
         </Text>
       </View>
 
-      {/* Main content */}
+      {/* Main content area */}
       <View style={styles.contentArea}>
         {panel === 'friends' ? (
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setPanel('none')}>
@@ -57,23 +93,45 @@ export default function HomeScreen() {
               <FriendsPanel />
             </Pressable>
           </Pressable>
+        ) : panel === 'rooms' ? (
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setPanel('none')}>
+            <Pressable onPress={(e) => e.stopPropagation()} style={styles.panelWrapper}>
+              <RoomsPanel onEnterRoom={handleEnterRoom} />
+            </Pressable>
+          </Pressable>
+        ) : panel === 'room' && currentRoom ? (
+          <View style={styles.panelWrapper}>
+            <RoomView room={currentRoom} onLeave={handleLeaveRoom} />
+          </View>
         ) : (
           <View style={styles.characterArea}>
             <View style={styles.speechBubble}>
-              <Text style={styles.speechText}>{SPEECH_IDLE}</Text>
+              <Text style={styles.speechText}>{SPEECH[stopwatch.status]}</Text>
               <View style={styles.speechTail} />
             </View>
-            <CharacterRenderer layers={DEFAULT_CHARACTER} size={200} />
+            {/* TODO(Phase 5): 공부 시작 시 캐릭터 장착 악세서리(노트북/커피) 모션 연출 */}
+            <CharacterRenderer layers={character} size={200} />
             <Text style={styles.tags}># Computer Science # Male</Text>
           </View>
         )}
       </View>
 
-      {/* Bottom button */}
+      {/* Bottom controls */}
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 16 }]}>
-        <TouchableOpacity style={styles.actionButton}>
-          <Text style={styles.actionButtonText}>START</Text>
-        </TouchableOpacity>
+        {stopwatch.status === 'idle' ? (
+          <TouchableOpacity style={styles.startButton} onPress={stopwatch.start} activeOpacity={0.8}>
+            <Text style={styles.startButtonText}>START</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.controlRow}>
+            <TouchableOpacity style={styles.controlBtn} onPress={handleStop} activeOpacity={0.8}>
+              <Image source={BTN_STOP} style={styles.controlBtnImg} resizeMode="stretch" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.controlBtn} onPress={stopwatch.end} activeOpacity={0.8}>
+              <Image source={BTN_END} style={styles.controlBtnImg} resizeMode="stretch" />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -159,16 +217,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
   },
-  actionButton: {
+  startButton: {
     backgroundColor: '#2B3580',
     borderRadius: 8,
     paddingVertical: 18,
     alignItems: 'center',
   },
-  actionButtonText: {
+  startButtonText: {
     fontFamily: 'PressStart2P_400Regular',
     fontSize: 14,
     color: '#fff',
     letterSpacing: 4,
+  },
+  controlRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  controlBtn: {
+    flex: 1,
+  },
+  controlBtnImg: {
+    width: '100%',
+    height: 56,
+    borderRadius: 8,
   },
 });

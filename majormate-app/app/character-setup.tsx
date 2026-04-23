@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  Alert,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,6 +10,16 @@ import {
 } from 'react-native';
 import CharacterRenderer, { CharacterGender, CharacterLayers, LayerKey } from '../components/CharacterRenderer';
 import { API_BASE_URL } from '../constants/api';
+
+interface CharacterItem {
+  id: string;
+  category: string;
+  name: string;
+  price: number;
+  filePath: string;
+}
+
+type ItemsByLayer = Record<LayerKey, CharacterItem[]>;
 
 const LAYER_ORDER: LayerKey[] = ['bottom', 'top', 'shoes', 'hair', 'bag', 'glasses', 'item'];
 
@@ -23,46 +33,47 @@ const LAYER_LABELS: Record<LayerKey, string> = {
   item: 'ITEM',
 };
 
-const ITEM_COUNT = 8;
-
-function options(prefix: string): string[] {
-  return Array.from({ length: ITEM_COUNT }, (_, i) => `${prefix}_${String(i + 1).padStart(2, '0')}`);
-}
-
-const LAYER_OPTIONS: Record<LayerKey, string[]> = {
-  bottom:  options('bottom'),
-  top:     options('top'),
-  shoes:   options('shoes'),
-  hair:    options('hair'),
-  bag:     options('bag'),
-  glasses: options('glasses'),
-  item:    options('item'),
-};
-
 const GENDERS: { label: string; value: CharacterGender }[] = [
   { label: 'MALE', value: 'male' },
   { label: 'FEMALE', value: 'female' },
 ];
 
+const EMPTY_ITEMS: ItemsByLayer = {
+  bottom: [], top: [], shoes: [], hair: [], bag: [], glasses: [], item: [],
+};
+
 export default function CharacterSetupScreen() {
   const router = useRouter();
   const [layers, setLayers] = useState<CharacterLayers>({ gender: 'male' });
+  const [itemsByLayer, setItemsByLayer] = useState<ItemsByLayer>(EMPTY_ITEMS);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/users/me/character`, { credentials: 'include' })
       .then((r) => r.json())
-      .then((data: CharacterLayers) => setLayers(data))
+      .then((data) => setLayers(data))
+      .catch(() => {});
+
+    fetch(`${API_BASE_URL}/api/items`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((items: CharacterItem[]) => {
+        const grouped: ItemsByLayer = { ...EMPTY_ITEMS };
+        for (const item of items) {
+          const key = item.category.toLowerCase() as LayerKey;
+          if (key in grouped) grouped[key].push(item);
+        }
+        setItemsByLayer(grouped);
+      })
       .catch(() => {});
   }, []);
 
   const handleGender = (g: CharacterGender) =>
     setLayers((prev) => ({ ...prev, gender: g }));
 
-  const handleSelect = (layer: LayerKey, value: string) =>
+  const handleSelect = (layer: LayerKey, url: string) =>
     setLayers((prev) => ({
       ...prev,
-      [layer]: prev[layer] === value ? null : value,
+      [layer]: prev[layer] === url ? null : url,
     }));
 
   const handleSave = async () => {
@@ -88,7 +99,6 @@ export default function CharacterSetupScreen() {
       <Text style={styles.title}>CHARACTER</Text>
       <Text style={styles.subtitle}>캐릭터를 꾸며보세요</Text>
 
-      {/* Preview */}
       <View style={styles.previewBox}>
         <CharacterRenderer layers={layers} size={180} />
       </View>
@@ -123,14 +133,19 @@ export default function CharacterSetupScreen() {
               >
                 <Text style={[styles.chipText, !layers[layerKey] && styles.chipTextSelected]}>NONE</Text>
               </TouchableOpacity>
-              {LAYER_OPTIONS[layerKey].map((opt) => (
+              {itemsByLayer[layerKey].map((item) => (
                 <TouchableOpacity
-                  key={opt}
-                  style={[styles.chip, layers[layerKey] === opt && styles.chipSelected]}
-                  onPress={() => handleSelect(layerKey, opt)}
+                  key={item.id}
+                  style={[styles.itemChip, layers[layerKey] === item.filePath && styles.chipSelected]}
+                  onPress={() => handleSelect(layerKey, item.filePath)}
                 >
-                  <Text style={[styles.chipText, layers[layerKey] === opt && styles.chipTextSelected]}>
-                    {opt.split('_')[1]}
+                  <Image
+                    source={{ uri: item.filePath }}
+                    style={styles.itemThumbnail}
+                    resizeMode="contain"
+                  />
+                  <Text style={[styles.itemName, layers[layerKey] === item.filePath && styles.chipTextSelected]}>
+                    {item.name}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -201,6 +216,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E1E1E',
     borderWidth: 1,
     borderColor: '#2A2A2A',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   chipSelected: {
     backgroundColor: '#2B3580',
@@ -213,6 +230,26 @@ const styles = StyleSheet.create({
   },
   chipTextSelected: {
     color: '#4FC3F7',
+  },
+  itemChip: {
+    width: 72,
+    paddingVertical: 8,
+    borderRadius: 6,
+    backgroundColor: '#1E1E1E',
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
+    alignItems: 'center',
+    gap: 4,
+  },
+  itemThumbnail: {
+    width: 48,
+    height: 48,
+  },
+  itemName: {
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 6,
+    color: '#555',
+    textAlign: 'center',
   },
   saveButton: {
     backgroundColor: '#2B3580',
