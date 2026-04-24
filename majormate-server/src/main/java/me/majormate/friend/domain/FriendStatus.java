@@ -1,5 +1,5 @@
 package me.majormate.friend.domain;
 
 public enum FriendStatus {
-    OFFLINE, STUDYING
+    OFFLINE, STUDYING, PAUSED
 }

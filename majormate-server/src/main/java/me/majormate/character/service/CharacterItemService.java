@@ -7,6 +7,7 @@ import me.majormate.character.dto.CharacterItemRequest;
 import me.majormate.character.dto.CharacterItemResponse;
 import me.majormate.character.repository.CharacterItemRepository;
 import me.majormate.common.exception.EntityNotFoundException;
+import me.majormate.common.service.AssetUrlService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,13 +19,14 @@ import java.util.UUID;
 public class CharacterItemService {
 
     private final CharacterItemRepository characterItemRepository;
+    private final AssetUrlService assetUrlService;
 
     @Transactional(readOnly = true)
     public List<CharacterItemResponse> getItems(ItemCategory category) {
         List<CharacterItem> items = (category != null)
                 ? characterItemRepository.findByCategory(category)
                 : characterItemRepository.findAll();
-        return items.stream().map(CharacterItemResponse::from).toList();
+        return items.stream().map(this::toResponse).toList();
     }
 
     @Transactional
@@ -35,7 +37,7 @@ public class CharacterItemService {
                 .price(req.price())
                 .filePath(req.filePath())
                 .build();
-        return CharacterItemResponse.from(characterItemRepository.save(item));
+        return toResponse(characterItemRepository.save(item));
     }
 
     @Transactional
@@ -43,7 +45,7 @@ public class CharacterItemService {
         CharacterItem item = characterItemRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("아이템을 찾을 수 없습니다: " + id));
         item.update(req.category(), req.name(), req.price(), req.filePath());
-        return CharacterItemResponse.from(characterItemRepository.save(item));
+        return toResponse(characterItemRepository.save(item));
     }
 
     @Transactional
@@ -52,5 +54,15 @@ public class CharacterItemService {
             throw new EntityNotFoundException("아이템을 찾을 수 없습니다: " + id);
         }
         characterItemRepository.deleteById(id);
+    }
+
+    private CharacterItemResponse toResponse(CharacterItem item) {
+        return new CharacterItemResponse(
+                item.getId(),
+                item.getCategory(),
+                item.getName(),
+                item.getPrice(),
+                assetUrlService.toUrl(item.getFilePath())
+        );
     }
 }

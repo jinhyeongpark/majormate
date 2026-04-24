@@ -5,6 +5,7 @@ import me.majormate.character.domain.CharacterLayer;
 import me.majormate.character.dto.CharacterResponse;
 import me.majormate.character.dto.CharacterUpdateRequest;
 import me.majormate.character.repository.CharacterRepository;
+import me.majormate.common.service.AssetUrlService;
 import me.majormate.user.domain.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,12 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class CharacterService {
 
     private final CharacterRepository characterRepository;
+    private final AssetUrlService assetUrlService;
 
     @Transactional(readOnly = true)
     public CharacterResponse getCharacter(User user) {
         return characterRepository.findByUser(user)
-                .map(CharacterResponse::from)
-                .orElse(CharacterResponse.from(null));
+                .map(this::toResponse)
+                .orElse(toResponse(null));
     }
 
     @Transactional
@@ -29,6 +31,20 @@ public class CharacterService {
 
         layer.update(req.bottom(), req.top(), req.shoes(), req.hair(),
                 req.bag(), req.glasses(), req.item(), req.gender());
-        return CharacterResponse.from(characterRepository.save(layer));
+        return toResponse(characterRepository.save(layer));
+    }
+
+    private CharacterResponse toResponse(CharacterLayer layer) {
+        if (layer == null) return new CharacterResponse("male", null, null, null, null, null, null, null);
+        return new CharacterResponse(
+                layer.getGender(),
+                assetUrlService.toUrl(layer.getBottom()),
+                assetUrlService.toUrl(layer.getTop()),
+                assetUrlService.toUrl(layer.getShoes()),
+                assetUrlService.toUrl(layer.getHair()),
+                assetUrlService.toUrl(layer.getBag()),
+                assetUrlService.toUrl(layer.getGlasses()),
+                assetUrlService.toUrl(layer.getItem())
+        );
     }
 }

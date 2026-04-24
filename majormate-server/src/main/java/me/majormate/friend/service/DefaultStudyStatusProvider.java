@@ -5,8 +5,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
-// Phase 4에서 Redis 기반 구현체로 교체 예정
-@Component
+// RedisStudyStatusProvider로 교체됨. 테스트용 fallback으로만 보존.
 public class DefaultStudyStatusProvider implements StudyStatusProvider {
 
     @Override
