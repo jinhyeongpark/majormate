@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Image,
+  ImageBackground,
   Pressable,
   StyleSheet,
   Text,
@@ -18,16 +19,44 @@ import { formatElapsed, useStopwatch } from '../../src/hooks/useStopwatch';
 
 const ICON_GROUPS = require('../../assets/icons/groups_icon.png');
 const ICON_ADD_FRIEND = require('../../assets/icons/add_friend_icon.png');
-const BTN_STOP = require('../../assets/icons/stop_button.png');
-const BTN_END = require('../../assets/icons/end_button.png');
+const BTN_START = require('../../assets/icons/start_but.png');
+const BTN_STOP = require('../../assets/icons/stop_but.png');
+const BTN_END = require('../../assets/icons/end_but.png');
+const BUBBLE = require('../../assets/icons/sentence.png');
 
 type Panel = 'none' | 'friends' | 'rooms' | 'room';
 
-const SPEECH: Record<string, string> = {
-  idle: 'keep studying bro',
-  running: 'wanna quit, uh?',
-  paused: 'take a break!',
+const SPEECHES: Record<string, string[]> = {
+  idle: [
+    'ready?',
+    "let's go!",
+    'focus up!',
+    'grind time!',
+    'tick tock!',
+    'start now!',
+  ],
+  running: [
+    'no quitting!',
+    'stay sharp!',
+    'on fire!',
+    'locked in!',
+    'keep going!',
+    'beast mode!',
+  ],
+  paused: [
+    'resting?',
+    'take 5!',
+    'come back!',
+    "don't quit!",
+    'hydrate!',
+    'back soon?',
+  ],
 };
+
+function pickSpeech(status: string) {
+  const list = SPEECHES[status] ?? SPEECHES.idle;
+  return list[Math.floor(Math.random() * list.length)];
+}
 
 export default function HomeScreen() {
   const [panel, setPanel] = useState<Panel>('none');
@@ -35,6 +64,7 @@ export default function HomeScreen() {
   const [character, setCharacter] = useState<CharacterLayers>({ gender: 'male' });
   const insets = useSafeAreaInsets();
   const stopwatch = useStopwatch();
+  const speech = useMemo(() => pickSpeech(stopwatch.status), [stopwatch.status]);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/users/me/character`, { credentials: 'include' })
@@ -56,14 +86,6 @@ export default function HomeScreen() {
   const handleLeaveRoom = () => {
     setCurrentRoom(null);
     setPanel('none');
-  };
-
-  const handleStop = () => {
-    if (stopwatch.status === 'running') {
-      stopwatch.pause();
-    } else {
-      stopwatch.resume();
-    }
   };
 
   return (
@@ -90,13 +112,13 @@ export default function HomeScreen() {
         {panel === 'friends' ? (
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setPanel('none')}>
             <Pressable onPress={(e) => e.stopPropagation()} style={styles.panelWrapper}>
-              <FriendsPanel />
+              <FriendsPanel onClose={() => setPanel('none')} />
             </Pressable>
           </Pressable>
         ) : panel === 'rooms' ? (
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setPanel('none')}>
             <Pressable onPress={(e) => e.stopPropagation()} style={styles.panelWrapper}>
-              <RoomsPanel onEnterRoom={handleEnterRoom} />
+              <RoomsPanel onEnterRoom={handleEnterRoom} onClose={() => setPanel('none')} />
             </Pressable>
           </Pressable>
         ) : panel === 'room' && currentRoom ? (
@@ -105,12 +127,13 @@ export default function HomeScreen() {
           </View>
         ) : (
           <View style={styles.characterArea}>
-            <View style={styles.speechBubble}>
-              <Text style={styles.speechText}>{SPEECH[stopwatch.status]}</Text>
-              <View style={styles.speechTail} />
+            <View style={styles.characterWrapper}>
+              <ImageBackground source={BUBBLE} style={styles.speechBubble} resizeMode="stretch">
+                <Text numberOfLines={1} style={styles.speechText}>{speech}</Text>
+              </ImageBackground>
+              {/* TODO(Phase 5): 공부 시작 시 캐릭터 장착 악세서리(노트북/커피) 모션 연출 */}
+              <CharacterRenderer layers={character} size={200} />
             </View>
-            {/* TODO(Phase 5): 공부 시작 시 캐릭터 장착 악세서리(노트북/커피) 모션 연출 */}
-            <CharacterRenderer layers={character} size={200} />
             <Text style={styles.tags}># Computer Science # Male</Text>
           </View>
         )}
@@ -118,19 +141,28 @@ export default function HomeScreen() {
 
       {/* Bottom controls */}
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 16 }]}>
-        {stopwatch.status === 'idle' ? (
-          <TouchableOpacity style={styles.startButton} onPress={stopwatch.start} activeOpacity={0.8}>
-            <Text style={styles.startButtonText}>START</Text>
-          </TouchableOpacity>
-        ) : (
+        {stopwatch.status === 'running' ? (
           <View style={styles.controlRow}>
-            <TouchableOpacity style={styles.controlBtn} onPress={handleStop} activeOpacity={0.8}>
+            <TouchableOpacity style={styles.controlBtn} onPress={stopwatch.pause} activeOpacity={0.8}>
               <Image source={BTN_STOP} style={styles.controlBtnImg} resizeMode="stretch" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.controlBtn} onPress={stopwatch.end} activeOpacity={0.8}>
               <Image source={BTN_END} style={styles.controlBtnImg} resizeMode="stretch" />
             </TouchableOpacity>
           </View>
+        ) : stopwatch.status === 'paused' ? (
+          <View style={styles.controlRow}>
+            <TouchableOpacity style={styles.controlBtn} onPress={stopwatch.resume} activeOpacity={0.8}>
+              <Image source={BTN_START} style={styles.controlBtnImg} resizeMode="stretch" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.controlBtn} onPress={stopwatch.end} activeOpacity={0.8}>
+              <Image source={BTN_END} style={styles.controlBtnImg} resizeMode="stretch" />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity onPress={stopwatch.start} activeOpacity={0.8}>
+            <Image source={BTN_START} style={styles.startButton} resizeMode="stretch" />
+          </TouchableOpacity>
         )}
       </View>
     </View>
@@ -180,32 +212,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
-  speechBubble: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    maxWidth: 220,
-    position: 'relative',
+  characterWrapper: {
+    width: 200,
+    height: 200,
   },
-  speechTail: {
+  speechBubble: {
     position: 'absolute',
-    bottom: -10,
-    left: 20,
-    width: 0,
-    height: 0,
-    borderLeftWidth: 8,
-    borderRightWidth: 8,
-    borderTopWidth: 10,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderTopColor: '#fff',
+    top: -72,
+    left: -72,
+    width: 160,
+    height: 90,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingBottom: 24,
+    paddingTop: 4,
   },
   speechText: {
     fontFamily: 'PressStart2P_400Regular',
-    fontSize: 9,
+    fontSize: 8,
     color: '#222',
-    lineHeight: 16,
+    textAlign: 'center',
   },
   tags: {
     fontFamily: 'PressStart2P_400Regular',
@@ -218,16 +245,9 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   startButton: {
-    backgroundColor: '#2B3580',
-    borderRadius: 8,
-    paddingVertical: 18,
-    alignItems: 'center',
-  },
-  startButtonText: {
-    fontFamily: 'PressStart2P_400Regular',
-    fontSize: 14,
-    color: '#fff',
-    letterSpacing: 4,
+    width: 134,
+    height: 64,
+    alignSelf: 'center',
   },
   controlRow: {
     flexDirection: 'row',

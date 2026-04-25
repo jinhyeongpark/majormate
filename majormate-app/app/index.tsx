@@ -1,12 +1,24 @@
 import { AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useGoogleLogin } from '../src/auth/useGoogleLogin';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { login, ready } = useGoogleLogin();
+  const [loading, setLoading] = useState(false);
 
-  const handleGoogleLogin = () => {
-    router.push('/onboarding');
+  const handleGoogleLogin = async () => {
+    try {
+      setLoading(true);
+      const { isNewUser } = await login();
+      router.replace(isNewUser ? '/onboarding' : '/(tabs)');
+    } catch {
+      Alert.alert('로그인 실패', '다시 시도해주세요.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -14,9 +26,17 @@ export default function LoginScreen() {
       <Text style={styles.logo}>MajorMate</Text>
       <Text style={styles.tagline}>전공으로 연결되는{'\n'}공부 플랫폼</Text>
 
-      <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
-        <AntDesign name="google" size={18} color="#fff" />
-        <Text style={styles.googleButtonText}>Google로 시작하기</Text>
+      <TouchableOpacity
+        style={[styles.googleButton, (!ready || loading) && styles.disabled]}
+        onPress={handleGoogleLogin}
+        disabled={!ready || loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" size="small" />
+        ) : (
+          <AntDesign name="google" size={18} color="#fff" />
+        )}
+        <Text style={styles.googleButtonText}>Google</Text>
       </TouchableOpacity>
     </View>
   );
@@ -51,9 +71,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     backgroundColor: '#2B3580',
-    borderRadius: 8,
     paddingVertical: 16,
     paddingHorizontal: 28,
+    borderBottomWidth: 4,
+    borderRightWidth: 4,
+    borderBottomColor: '#1a2160',
+    borderRightColor: '#1a2160',
+    borderTopWidth: 2,
+    borderLeftWidth: 2,
+    borderTopColor: '#4d5fa8',
+    borderLeftColor: '#4d5fa8',
+  },
+  disabled: {
+    opacity: 0.5,
   },
   googleButtonText: {
     fontFamily: 'PressStart2P_400Regular',

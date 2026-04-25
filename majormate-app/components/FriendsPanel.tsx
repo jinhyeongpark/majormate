@@ -3,12 +3,17 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Image,
+  ImageBackground,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+
+const ADD_BUT = require('../assets/icons/add_but.png');
+const TYPE_BUT = require('../assets/icons/type_but.png');
 import {
   FriendResponse,
   addFriend,
@@ -16,7 +21,11 @@ import {
   fetchMyFriendCode,
 } from '../src/api/friends';
 
-export default function FriendsPanel() {
+interface FriendsPanelProps {
+  onClose: () => void;
+}
+
+export default function FriendsPanel({ onClose }: FriendsPanelProps) {
   const [friends, setFriends] = useState<FriendResponse[]>([]);
   const [myCode, setMyCode] = useState('');
   const [inputCode, setInputCode] = useState('');
@@ -50,29 +59,39 @@ export default function FriendsPanel() {
 
   return (
     <View style={styles.panel}>
+      <View style={styles.panelHeader}>
+        <Text style={styles.panelTitle}>FRIENDS</Text>
+        <TouchableOpacity onPress={onClose} hitSlop={12}>
+          <View style={styles.closeButton}>
+            <Text style={styles.closeButtonText}>X</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
       {/* My friend code */}
       <View style={styles.myCodeRow}>
-        <Text style={styles.myCodeLabel}>내 코드</Text>
+        <Text style={styles.myCodeLabel}>MY CODE</Text>
         <Text style={styles.myCode}>{myCode || '—'}</Text>
       </View>
 
       {/* Add friend input */}
       <View style={styles.addRow}>
-        <TextInput
-          style={styles.input}
-          placeholder="친구 코드 입력"
-          placeholderTextColor="#888"
-          value={inputCode}
-          onChangeText={setInputCode}
-          autoCapitalize="characters"
-          maxLength={8}
-        />
+        <ImageBackground source={TYPE_BUT} style={styles.inputWrapper} resizeMode="stretch">
+          <TextInput
+            style={styles.input}
+            placeholder="ENTER CODE"
+            placeholderTextColor="#555"
+            value={inputCode}
+            onChangeText={setInputCode}
+            autoCapitalize="characters"
+            maxLength={8}
+          />
+        </ImageBackground>
         <TouchableOpacity
-          style={[styles.addButton, adding && { opacity: 0.6 }]}
+          style={[adding && { opacity: 0.6 }]}
           onPress={handleAdd}
           disabled={adding}
         >
-          <Text style={styles.addButtonText}>{adding ? '...' : '추가'}</Text>
+          <Image source={ADD_BUT} style={styles.addButton} resizeMode="stretch" />
         </TouchableOpacity>
       </View>
 
@@ -80,7 +99,7 @@ export default function FriendsPanel() {
       {loading ? (
         <ActivityIndicator color="#4FC3F7" style={{ marginTop: 24 }} />
       ) : friends.length === 0 ? (
-        <Text style={styles.empty}>아직 친구가 없습니다</Text>
+        <Text style={styles.empty}>NO FRIENDS YET</Text>
       ) : (
         <FlatList
           data={friends}
@@ -120,6 +139,33 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
   },
+  panelHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  panelTitle: {
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 9,
+    color: '#4FC3F7',
+    letterSpacing: 1,
+  },
+  closeButton: {
+    width: 28,
+    height: 28,
+    backgroundColor: '#1A1A1A',
+    borderWidth: 2,
+    borderColor: '#444',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeButtonText: {
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 9,
+    color: '#aaa',
+    lineHeight: 12,
+  },
   myCodeRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -131,8 +177,8 @@ const styles = StyleSheet.create({
   },
   myCodeLabel: {
     color: '#888',
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 8,
+    fontFamily: 'PressStart2P_400Regular',
     letterSpacing: 1,
   },
   myCode: {
@@ -145,28 +191,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     marginBottom: 16,
+    alignItems: 'center',
+  },
+  inputWrapper: {
+    flex: 1,
+    height: 52,
   },
   input: {
-    flex: 1,
-    backgroundColor: '#2A2A2A',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    color: '#fff',
-    fontSize: 14,
+    paddingLeft: 28,
+    paddingTop: 18,
+    color: '#111',
+    fontSize: 13,
     letterSpacing: 1,
-    fontFamily: 'monospace',
+    fontFamily: 'PressStart2P_400Regular',
   },
   addButton: {
-    backgroundColor: '#5B2EE0',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    justifyContent: 'center',
-  },
-  addButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 13,
+    width: 52,
+    height: 52,
   },
   list: {
     flex: 1,
@@ -175,7 +216,8 @@ const styles = StyleSheet.create({
     color: '#555',
     textAlign: 'center',
     marginTop: 32,
-    fontSize: 13,
+    fontSize: 8,
+    fontFamily: 'PressStart2P_400Regular',
   },
   friendRow: {
     flexDirection: 'row',
@@ -210,8 +252,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   statusLabel: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: 7,
+    fontFamily: 'PressStart2P_400Regular',
     letterSpacing: 0.5,
   },
   labelStudying: {

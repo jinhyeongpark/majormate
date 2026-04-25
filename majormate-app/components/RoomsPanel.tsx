@@ -11,9 +11,10 @@ import { RoomSummary, fetchRooms } from '../src/api/rooms';
 
 interface Props {
   onEnterRoom: (room: RoomSummary) => void;
+  onClose: () => void;
 }
 
-export default function RoomsPanel({ onEnterRoom }: Props) {
+export default function RoomsPanel({ onEnterRoom, onClose }: Props) {
   const [majorRooms, setMajorRooms] = useState<RoomSummary[]>([]);
   const [customRooms, setCustomRooms] = useState<RoomSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,10 +39,18 @@ export default function RoomsPanel({ onEnterRoom }: Props) {
 
   return (
     <View style={styles.panel}>
+      <View style={styles.panelHeader}>
+        <Text style={styles.panelTitle}>ROOMS</Text>
+        <TouchableOpacity onPress={onClose} hitSlop={12}>
+          <View style={styles.closeButton}>
+            <Text style={styles.closeButtonText}>X</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
       <ScrollView showsVerticalScrollIndicator={false}>
         {majorRooms.length > 0 && (
           <>
-            <Text style={styles.sectionLabel}>전공방</Text>
+            <Text style={styles.sectionLabel}>MAJOR</Text>
             {majorRooms.map((room) => (
               <RoomItem key={room.id} room={room} onPress={() => onEnterRoom(room)} />
             ))}
@@ -49,10 +58,10 @@ export default function RoomsPanel({ onEnterRoom }: Props) {
         )}
 
         <Text style={[styles.sectionLabel, majorRooms.length > 0 && { marginTop: 20 }]}>
-          커스텀방
+          CUSTOM
         </Text>
         {customRooms.length === 0 ? (
-          <Text style={styles.empty}>커스텀방이 없습니다</Text>
+          <Text style={styles.empty}>NO ROOMS</Text>
         ) : (
           customRooms.map((room) => (
             <RoomItem key={room.id} room={room} onPress={() => onEnterRoom(room)} />
@@ -83,6 +92,33 @@ const styles = StyleSheet.create({
     backgroundColor: '#1A1A1A',
     borderRadius: 16,
     padding: 16,
+  },
+  panelHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  panelTitle: {
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 9,
+    color: '#4FC3F7',
+    letterSpacing: 1,
+  },
+  closeButton: {
+    width: 28,
+    height: 28,
+    backgroundColor: '#1A1A1A',
+    borderWidth: 2,
+    borderColor: '#444',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeButtonText: {
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 9,
+    color: '#aaa',
+    lineHeight: 12,
   },
   sectionLabel: {
     color: '#555',
@@ -118,8 +154,9 @@ const styles = StyleSheet.create({
   },
   empty: {
     color: '#555',
-    fontSize: 12,
+    fontSize: 8,
     marginTop: 16,
     textAlign: 'center',
+    fontFamily: 'PressStart2P_400Regular',
   },
 });

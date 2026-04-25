@@ -65,18 +65,18 @@ export default function RoomView({ room, onLeave }: Props) {
         <View>
           <Text style={styles.roomName}>{room.name}</Text>
           <Text style={styles.roomMeta}>
-            {room.major}  ·  {members.length}/{room.maxMembers}명
+            {room.major}  ·  {members.length}/{room.maxMembers}
           </Text>
         </View>
         <TouchableOpacity onPress={handleLeave} style={styles.leaveButton} activeOpacity={0.7}>
-          <Text style={styles.leaveText}>나가기</Text>
+          <Text style={styles.leaveText}>LEAVE</Text>
         </TouchableOpacity>
       </View>
 
       {loading ? (
         <ActivityIndicator color="#4FC3F7" style={{ marginTop: 32 }} />
       ) : members.length === 0 ? (
-        <Text style={styles.empty}>아직 멤버가 없습니다</Text>
+        <Text style={styles.empty}>NO MEMBERS</Text>
       ) : (
         <FlatList
           data={members}
@@ -156,13 +156,15 @@ const styles = StyleSheet.create({
   },
   leaveText: {
     color: '#888',
-    fontSize: 12,
+    fontSize: 8,
+    fontFamily: 'PressStart2P_400Regular',
   },
   empty: {
     color: '#555',
     textAlign: 'center',
     marginTop: 32,
-    fontSize: 13,
+    fontSize: 8,
+    fontFamily: 'PressStart2P_400Regular',
   },
   grid: {
     paddingBottom: 8,

@@ -9,13 +9,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import MajorSearchInput from '../components/MajorSearchInput';
 import { API_BASE_URL } from '../constants/api';
 
 const GENDERS = [
-  { label: '남성', value: 'MALE' },
-  { label: '여성', value: 'FEMALE' },
-  { label: '기타', value: 'OTHER' },
-  { label: '비공개', value: 'PREFER_NOT_TO_SAY' },
+  { label: 'MALE', value: 'MALE' },
+  { label: 'FEMALE', value: 'FEMALE' },
+  { label: 'OTHER', value: 'OTHER' },
+  { label: 'PRIVATE', value: 'PREFER_NOT_TO_SAY' },
 ] as const;
 
 type Gender = (typeof GENDERS)[number]['value'];
@@ -45,19 +46,19 @@ export default function OnboardingScreen() {
     } catch {
       // 백엔드 미연동 시에도 UI 플로우 진행
     }
-    router.push('/character-setup');
+    router.replace('/character-setup');
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <Text style={styles.title}>PROFILE</Text>
-      <Text style={styles.subtitle}>정보를 입력해주세요</Text>
+      <Text style={styles.subtitle}>set up your profile</Text>
 
       <View style={styles.field}>
         <Text style={styles.label}>NICKNAME *</Text>
         <TextInput
           style={styles.input}
-          placeholder="2~20자"
+          placeholder="2-20 chars"
           placeholderTextColor="#444"
           value={nickname}
           onChangeText={setNickname}
@@ -65,15 +66,9 @@ export default function OnboardingScreen() {
         />
       </View>
 
-      <View style={styles.field}>
+      <View style={[styles.field, { zIndex: 10 }]}>
         <Text style={styles.label}>MAJOR</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Computer Science"
-          placeholderTextColor="#444"
-          value={major}
-          onChangeText={setMajor}
-        />
+        <MajorSearchInput value={major} onChange={setMajor} />
       </View>
 
       <View style={styles.field}>
@@ -179,10 +174,17 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     backgroundColor: '#2B3580',
-    borderRadius: 8,
     paddingVertical: 18,
     alignItems: 'center',
     marginTop: 16,
+    borderBottomWidth: 4,
+    borderRightWidth: 4,
+    borderBottomColor: '#1a2160',
+    borderRightColor: '#1a2160',
+    borderTopWidth: 2,
+    borderLeftWidth: 2,
+    borderTopColor: '#4d5fa8',
+    borderLeftColor: '#4d5fa8',
   },
   nextButtonText: {
     fontFamily: 'PressStart2P_400Regular',
