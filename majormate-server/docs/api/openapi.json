@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "MajorMate API",
-    "description": "Global Major-based Study Platform — Backend API\n\n## WebSocket / STOMP (실시간 스톱워치)\n\n연결 엔드포인트: `ws://localhost:8082/ws` (SockJS)\n\n### 구독 토픽\n| 토픽 | 설명 |\n|---|---|\n| `/topic/room.{roomId}` | 방 멤버 상태 브로드캐스트 |\n| `/user/queue/errors` | 개인 에러 메시지 |\n\n### 전송 대상 (prefix: `/app`)\n| 대상 | Payload | 설명 |\n|---|---|---|\n| `/app/stopwatch.start` | `StartStopwatchRequest` | 스톱워치 시작 |\n| `/app/stopwatch.pause` | - | 일시정지 |\n| `/app/stopwatch.resume` | - | 재시작 |\n| `/app/stopwatch.end` | - | 종료 및 DB 저장 |\n| `/app/stopwatch.keyword` | `UpdateKeywordRequest` | 키워드 변경 |\n\n### 브로드캐스트 메시지 타입 (`RoomBroadcastMessage.type`)\n`MEMBER_JOINED` · `MEMBER_LEFT` · `MEMBER_STARTED` · `MEMBER_PAUSED` · `MEMBER_RESUMED` · `MEMBER_ENDED` · `MEMBER_KEYWORD_UPDATED`",
+    "description": "Global Major-based Study Platform — Backend API\n\n## WebSocket / STOMP (실시간)\n\n연결 엔드포인트: `ws://localhost:8082/ws` (SockJS)\n\n### 구독 토픽\n| 토픽 | 설명 |\n|---|---|\n| `/topic/room.{roomId}` | 방 멤버 상태 브로드캐스트 |\n| `/topic/chat.{chatRoomId}` | 1:1 Q&A 채팅 메시지 수신 |\n| `/user/queue/errors` | 개인 에러 메시지 |\n\n### 전송 대상 (prefix: `/app`)\n| 대상 | Payload | 설명 |\n|---|---|---|\n| `/app/stopwatch.start` | `StartStopwatchRequest` | 스톱워치 시작 |\n| `/app/stopwatch.pause` | - | 일시정지 |\n| `/app/stopwatch.resume` | - | 재시작 |\n| `/app/stopwatch.end` | - | 종료 및 DB 저장 |\n| `/app/stopwatch.keyword` | `UpdateKeywordRequest` | 키워드 변경 |\n| `/app/chat.{chatRoomId}` | `ChatMessageRequest` | 채팅 메시지 전송 |\n\n### 브로드캐스트 메시지 타입 (`RoomBroadcastMessage.type`)\n`MEMBER_JOINED` · `MEMBER_LEFT` · `MEMBER_STARTED` · `MEMBER_PAUSED` · `MEMBER_RESUMED` · `MEMBER_ENDED` · `MEMBER_KEYWORD_UPDATED`",
     "version": "1.0.0"
   },
   "servers": [
@@ -11,14 +11,34 @@
   "tags": [
     { "name": "Auth",      "description": "Google OAuth2 인증" },
     { "name": "User",      "description": "사용자 프로필" },
+    { "name": "Major",     "description": "전공 목록 (인증 불필요)" },
     { "name": "Character", "description": "캐릭터 레이어 시스템" },
     { "name": "Friend",    "description": "친구 코드 & 네트워킹" },
     { "name": "Room",      "description": "전공방 & 커스텀 스터디룸" },
     { "name": "Session",   "description": "스톱워치 세션 (STOMP)" },
+    { "name": "QA",        "description": "질문 요청 & 1:1 채팅" },
     { "name": "Stats",     "description": "학습 통계" },
     { "name": "Admin",     "description": "관리자 전용 API" }
   ],
   "paths": {
+    "/api/majors": {
+      "get": {
+        "tags": ["Major"],
+        "summary": "전공 목록 전체 조회",
+        "operationId": "getMajors",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "전공 목록",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/MajorResponse" } }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/me": {
       "get": {
         "tags": ["Auth"],
@@ -30,6 +50,25 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserResponse" } } }
           },
           "401": { "description": "미인증" }
+        }
+      }
+    },
+    "/api/auth/google": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "모바일 Google 로그인 (Access Token → JWT)",
+        "operationId": "googleMobileAuth",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GoogleAuthRequest" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "로그인 성공",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GoogleAuthResponse" } } }
+          },
+          "401": { "description": "유효하지 않은 액세스 토큰 또는 이메일 미인증" }
         }
       }
     },
@@ -67,7 +106,22 @@
           "200": {
             "description": "수정된 프로필",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProfileResponse" } } }
-          }
+          },
+          "400": { "description": "존재하지 않는 전공 값" }
+        }
+      }
+    },
+    "/api/users/me/fcm-token": {
+      "post": {
+        "tags": ["User"],
+        "summary": "FCM 디바이스 토큰 저장/갱신",
+        "operationId": "updateFcmToken",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FcmTokenRequest" } } }
+        },
+        "responses": {
+          "204": { "description": "토큰 저장 성공" }
         }
       }
     },
@@ -314,6 +368,81 @@
         }
       }
     },
+    "/api/qa/request": {
+      "post": {
+        "tags": ["QA"],
+        "summary": "질문 요청 전송 (질문받기 허용 유저에게만 가능)",
+        "operationId": "createQaRequest",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/QaRequestCreateRequest" } } }
+        },
+        "responses": {
+          "201": {
+            "description": "질문 요청 생성",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/QaRequestResponse" } } }
+          },
+          "400": { "description": "대상 유저가 질문을 허용하지 않음" },
+          "404": { "description": "대상 유저 없음" }
+        }
+      }
+    },
+    "/api/qa/{requestId}/accept": {
+      "post": {
+        "tags": ["QA"],
+        "summary": "질문 요청 수락 → 1:1 채팅방 생성",
+        "operationId": "acceptQaRequest",
+        "parameters": [
+          { "name": "requestId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "수락 완료. `chatRoomId` 포함",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/QaRequestResponse" } } }
+          },
+          "403": { "description": "응답 권한 없음" },
+          "404": { "description": "요청 없음" }
+        }
+      }
+    },
+    "/api/qa/{requestId}/reject": {
+      "post": {
+        "tags": ["QA"],
+        "summary": "질문 요청 거절",
+        "operationId": "rejectQaRequest",
+        "parameters": [
+          { "name": "requestId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "거절 완료",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/QaRequestResponse" } } }
+          },
+          "403": { "description": "응답 권한 없음" },
+          "404": { "description": "요청 없음" }
+        }
+      }
+    },
+    "/api/qa/chat/{chatRoomId}/history": {
+      "get": {
+        "tags": ["QA"],
+        "summary": "채팅 내역 조회",
+        "operationId": "getChatHistory",
+        "parameters": [
+          { "name": "chatRoomId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "채팅 메시지 목록 (시간순)",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ChatMessageResponse" } }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/stats/me": {
       "get": {
         "tags": ["Stats"],
@@ -338,6 +467,29 @@
   },
   "components": {
     "schemas": {
+      "GoogleAuthRequest": {
+        "type": "object",
+        "required": ["accessToken"],
+        "properties": {
+          "accessToken": { "type": "string", "description": "Google OAuth2 액세스 토큰 (userinfo API 호출용)" }
+        }
+      },
+      "GoogleAuthResponse": {
+        "type": "object",
+        "properties": {
+          "token":     { "type": "string", "description": "JWT (30일 유효, HS256)" },
+          "isNewUser": { "type": "boolean", "description": "최초 가입 여부" }
+        }
+      },
+      "MajorResponse": {
+        "type": "object",
+        "properties": {
+          "id":       { "type": "integer", "format": "int64" },
+          "nameKo":   { "type": "string", "description": "전공명 (한국어)" },
+          "nameEn":   { "type": "string", "description": "전공명 (영어)" },
+          "category": { "type": "string", "description": "계열", "example": "이공계" }
+        }
+      },
       "UserResponse": {
         "type": "object",
         "properties": {
@@ -368,6 +520,13 @@
           "major":       { "type": "string" },
           "nationality": { "type": "string" },
           "gender":      { "type": "string", "enum": ["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"] }
+        }
+      },
+      "FcmTokenRequest": {
+        "type": "object",
+        "required": ["token"],
+        "properties": {
+          "token": { "type": "string", "description": "Expo / FCM 디바이스 푸시 토큰" }
         }
       },
       "CharacterResponse": {
@@ -492,6 +651,48 @@
           "maxMembers": { "type": "integer", "default": 30 }
         }
       },
+      "QaRequestCreateRequest": {
+        "type": "object",
+        "required": ["targetUserId"],
+        "properties": {
+          "targetUserId": { "type": "string", "format": "uuid", "description": "질문 대상 유저 ID (현재 공부 중 + 질문허용 상태여야 함)" },
+          "message":      { "type": "string", "maxLength": 500, "nullable": true }
+        }
+      },
+      "QaRequestResponse": {
+        "type": "object",
+        "properties": {
+          "id":               { "type": "string", "format": "uuid" },
+          "requesterId":      { "type": "string", "format": "uuid" },
+          "requesterNickname": { "type": "string" },
+          "targetId":         { "type": "string", "format": "uuid" },
+          "targetNickname":   { "type": "string" },
+          "message":          { "type": "string", "nullable": true },
+          "status":           { "type": "string", "enum": ["PENDING", "ACCEPTED", "REJECTED"] },
+          "chatRoomId":       { "type": "string", "format": "uuid", "nullable": true, "description": "수락 시 생성되는 1:1 채팅방 ID" },
+          "createdAt":        { "type": "string", "format": "date-time" }
+        }
+      },
+      "ChatMessageRequest": {
+        "type": "object",
+        "description": "STOMP `/app/chat.{chatRoomId}` payload",
+        "required": ["content"],
+        "properties": {
+          "content": { "type": "string" }
+        }
+      },
+      "ChatMessageResponse": {
+        "type": "object",
+        "description": "STOMP `/topic/chat.{chatRoomId}` 브로드캐스트 메시지",
+        "properties": {
+          "id":             { "type": "string", "format": "uuid" },
+          "chatRoomId":     { "type": "string", "format": "uuid" },
+          "senderId":       { "type": "string", "format": "uuid" },
+          "senderNickname": { "type": "string" },
+          "content":        { "type": "string" },
+          "createdAt":      { "type": "string", "format": "date-time" }
+        }
+      },
       "StartStopwatchRequest": {
         "type": "object",
         "description": "STOMP `/app/stopwatch.start` payload",
@@ -528,14 +729,14 @@
         "type": "object",
         "properties": {
           "period":       { "type": "string", "enum": ["WEEKLY", "MONTHLY"] },
-          "totalSeconds": { "type": "integer" },
+          "totalSeconds": { "type": "integer", "format": "int64" },
           "dailyBreakdown": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
                 "date":    { "type": "string", "format": "date" },
-                "seconds": { "type": "integer" }
+                "seconds": { "type": "integer", "format": "int64" }
               }
             }
           },
@@ -557,8 +758,13 @@
         "type": "apiKey",
         "in": "cookie",
         "name": "JSESSIONID"
+      },
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     }
   },
-  "security": [{ "cookieAuth": [] }]
+  "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }]
 }

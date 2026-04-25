@@ -49,6 +49,9 @@ spring:
 asset:
   base-url: ${ASSET_BASE_URL:https://cdn.majormate.com}
 
+firebase:
+  service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:}
+
 springdoc:
   api-docs:
     path: /api-docs
