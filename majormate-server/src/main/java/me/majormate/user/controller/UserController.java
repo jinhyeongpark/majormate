@@ -6,6 +6,7 @@ import me.majormate.character.dto.CharacterResponse;
 import me.majormate.character.dto.CharacterUpdateRequest;
 import me.majormate.character.service.CharacterService;
 import me.majormate.user.domain.User;
+import me.majormate.user.dto.FcmTokenRequest;
 import me.majormate.user.dto.ProfileResponse;
 import me.majormate.user.dto.ProfileUpdateRequest;
 import me.majormate.user.service.UserService;
@@ -48,6 +49,14 @@ public class UserController {
             @RequestBody CharacterUpdateRequest req) {
         User user = resolve(oAuth2User);
         return ResponseEntity.ok(characterService.updateCharacter(user, req));
+    }
+
+    @PostMapping("/me/fcm-token")
+    public ResponseEntity<Void> updateFcmToken(
+            @AuthenticationPrincipal OAuth2User oAuth2User,
+            @Valid @RequestBody FcmTokenRequest req) {
+        userService.updateFcmToken(resolve(oAuth2User), req.token());
+        return ResponseEntity.noContent().build();
     }
 
     private User resolve(OAuth2User oAuth2User) {

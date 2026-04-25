@@ -1,6 +1,9 @@
-# majormate-app
+# majormate-app — 앱 서브에이전트 컨텍스트
 
-React Native (Expo) 클라이언트. 이 디렉터리에서 Claude를 열면 이 파일이 기본 컨텍스트가 된다.
+React Native (Expo) 클라이언트. CTO 에이전트가 앱 작업을 위임할 때 이 파일이 컨텍스트로 사용된다.
+
+> **서브에이전트 완료 조건**: 작업 완료 후 반드시 결과를 요약해 CTO에게 반환한다.  
+> 반환 내용: 생성·수정된 파일 목록, 새 화면·컴포넌트, API 연동 내용.
 
 ## 커맨드
 
@@ -16,8 +19,8 @@ npm run ios        # iOS 시뮬레이터 실행
 |---|---|
 | 프레임워크 | React Native 0.79, Expo ~53 |
 | 라우팅 | Expo Router ~4 (파일 기반, `app/` 디렉터리) |
-| 상태 관리 | Zustand (도입 예정) |
-| API 클라이언트 | axios, `src/api/` 에 도메인별로 분리 (도입 예정) |
+| 상태 관리 | Zustand |
+| API 클라이언트 | axios, `src/api/` 에 도메인별로 분리 |
 | 스타일 | StyleSheet (NativeWind 사용 안 함) |
 | 언어 | TypeScript ~5.8 |
 
@@ -28,8 +31,9 @@ app/              # Expo Router 라우트 (화면 단위)
 components/       # 공통 컴포넌트
 assets/           # 이미지, 폰트 등 정적 리소스
 constants/        # 공통 상수
-src/              # 비즈니스 로직 (점진적으로 이전)
+src/
   api/            # 도메인별 API 클라이언트
+  auth/           # 인증 토큰 관리
   config/env.ts   # 환경변수 및 base URL
 ```
 
@@ -41,13 +45,13 @@ src/              # 비즈니스 로직 (점진적으로 이전)
 
 ## API 연동
 
-- base URL은 `src/config/env.ts` 참고
-- 인증 토큰은 axios interceptor로 처리 (`src/api/client.ts`)
-- 에러 처리는 공통 에러 핸들러 사용
+- base URL: `src/config/env.ts`
+- 인증 토큰: axios interceptor (`src/api/client.ts`)
+- 에러 처리: 공통 에러 핸들러 사용
 
-## UI 작업 시 레퍼런스 요청 규칙
+## UI 작업 레퍼런스 규칙
 
-새로운 화면(screen) UI 작업을 시작하기 전에 **반드시 사용자에게 디자인 레퍼런스 이미지를 요청**한다.
+새로운 화면(screen) UI 작업을 시작하기 전에 **반드시 디자인 레퍼런스 이미지를 요청**한다.
 
 요청 포맷:
 ```

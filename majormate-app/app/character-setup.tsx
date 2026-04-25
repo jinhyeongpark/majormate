@@ -21,7 +21,7 @@ interface CharacterItem {
 
 type ItemsByLayer = Record<LayerKey, CharacterItem[]>;
 
-const LAYER_ORDER: LayerKey[] = ['bottom', 'top', 'shoes', 'hair', 'bag', 'glasses', 'item'];
+const LAYER_ORDER: LayerKey[] = ['hair', 'top', 'bottom', 'shoes'];
 
 const LAYER_LABELS: Record<LayerKey, string> = {
   bottom: 'BOTTOM',
@@ -253,11 +253,18 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: '#2B3580',
-    borderRadius: 8,
     paddingVertical: 18,
     alignItems: 'center',
     marginTop: 16,
     marginBottom: 40,
+    borderBottomWidth: 4,
+    borderRightWidth: 4,
+    borderBottomColor: '#1a2160',
+    borderRightColor: '#1a2160',
+    borderTopWidth: 2,
+    borderLeftWidth: 2,
+    borderTopColor: '#4d5fa8',
+    borderLeftColor: '#4d5fa8',
   },
   saveButtonText: {
     fontFamily: 'PressStart2P_400Regular',

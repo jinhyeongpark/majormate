@@ -43,6 +43,9 @@ public class User {
     @Builder.Default
     private UserRole role = UserRole.USER;
 
+    @Column(length = 512)
+    private String fcmToken;
+
     public static User ofOAuth2(String email, String name) {
         return User.builder()
                 .email(email)
@@ -60,5 +63,9 @@ public class User {
         if (major != null)       this.major = major;
         if (nationality != null) this.nationality = nationality;
         if (gender != null)      this.gender = gender;
+    }
+
+    public void updateFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
     }
 }

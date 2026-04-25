@@ -2,6 +2,9 @@ package me.majormate.stopwatch.service;
 
 import lombok.RequiredArgsConstructor;
 import me.majormate.common.exception.EntityNotFoundException;
+import me.majormate.friend.domain.Friendship;
+import me.majormate.friend.repository.FriendshipRepository;
+import me.majormate.notification.FcmService;
 import me.majormate.room.domain.Room;
 import me.majormate.room.repository.RoomRepository;
 import me.majormate.stopwatch.domain.StudySession;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -24,6 +28,8 @@ public class StopwatchService {
     private final SessionStateService sessionStateService;
     private final StudySessionRepository studySessionRepository;
     private final RoomRepository roomRepository;
+    private final FriendshipRepository friendshipRepository;
+    private final FcmService fcmService;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
@@ -51,6 +57,11 @@ public class StopwatchService {
                 .currentStartTimeEpoch(sessionStateService.getCurrentStartTime(user.getId()))
                 .accumulatedMs(0)
                 .build());
+
+        List<User> friends = friendshipRepository.findAllByUser(user).stream()
+                .map(f -> f.getRequester().getId().equals(user.getId()) ? f.getAddressee() : f.getRequester())
+                .toList();
+        fcmService.sendToUsers(friends, user.getNickname() + "님이 공부를 시작했어요! 📚", "");
     }
 
     public void pause(User user) {

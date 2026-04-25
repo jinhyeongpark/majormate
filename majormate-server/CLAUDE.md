@@ -1,6 +1,9 @@
-# majormate-server
+# majormate-server — 서버 서브에이전트 컨텍스트
 
-Spring Boot 백엔드 서버. 이 디렉터리에서 Claude를 열면 이 파일이 기본 컨텍스트가 된다.
+Spring Boot 백엔드 서버. CTO 에이전트가 서버 작업을 위임할 때 이 파일이 컨텍스트로 사용된다.
+
+> **서브에이전트 완료 조건**: 작업 완료 후 반드시 결과를 요약해 CTO에게 반환한다.  
+> 반환 내용: 생성·수정된 파일 목록, 새 API 엔드포인트(경로·메서드), DTO 스키마(요청·응답 필드).
 
 ## 커맨드
 
@@ -21,7 +24,7 @@ Spring Boot 백엔드 서버. 이 디렉터리에서 Claude를 열면 이 파일
 | 관심사 | 기술 |
 |---|---|
 | 프레임워크 | Spring Boot 3.3.4, Spring MVC, Java 21 |
-| 인증 | Spring Security + OAuth2 (Google) |
+| 인증 | Spring Security + OAuth2 (Google) + JWT |
 | 영속성 | Spring Data JPA + PostgreSQL |
 | 동적 쿼리 | QueryDSL |
 | 캐시 / pub-sub | Redis |
@@ -32,7 +35,7 @@ Spring Boot 백엔드 서버. 이 디렉터리에서 Claude를 열면 이 파일
 
 ```
 me.majormate/
-  auth/         # Google OAuth 2.0, 세션 관리
+  auth/         # Google OAuth 2.0, JWT, 세션 관리
   user/         # 유저 프로필
   character/    # 6-레이어 픽셀 캐릭터 (Base → Bottom → Top → Shoes → Hair → Accessories)
   friend/       # 친구 코드 기반 네트워킹
@@ -49,6 +52,7 @@ me.majormate/
 
 - **Contract-first**: 엔드포인트 구현 전에 API 계약을 먼저 확정한다 (`implementation_plan.md` 기준)
 - 베이스 패키지: `me.majormate`
+- 각 도메인 패키지 내부 구조: `controller/`, `service/`, `repository/`, `domain/`, `dto/`
 
 ## OpenAPI 동기화 규칙 (필수)
 
