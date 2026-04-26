@@ -95,6 +95,19 @@ PRD.md에 파악된 철학과 핵심 기술 스택을 바탕으로 백엔드와 
   - 질문 요청 수락/거절 알림 수신 및 수락 시 1:1 채팅방 화면으로 자동 전환.
   - 통계 데이터 시각화 차트(진척도 파악용)를 Dashboard 형태로 노출.
 
+> **🔧 미해결: Android 빌드 오류 (다음 세션에서 이어서 진행)**
+>
+> USB 디버깅 기기(`R3CY80H51TX`)에 앱을 설치하려다 Gradle 빌드 실패.
+>
+> **원인**: `expo-modules-autolinking` 3.0.24가 `org.gradle.internal.extensions.core.extra` API를 사용하는데, 이 API는 Gradle 8.9 이상에서만 존재함.
+>
+> **현재 상태**: `gradle-wrapper.properties`의 Gradle 버전을 `8.10.2`로 수정한 상태 (미검증).
+>
+> **다음 세션 할 일**:
+> 1. `majormate-app/` 디렉터리에서 `npx expo run:android` 실행
+> 2. 빌드 성공 여부 확인, 실패 시 에러 메시지 보고 추가 수정
+> 3. 기기에 앱 정상 설치/실행 확인
+
 ---
 
 ### Phase 6: 그룹 초대 시스템 (Room 도메인 확장)

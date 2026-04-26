@@ -63,6 +63,17 @@ me.majormate/
 
 각 도메인 패키지 내부 구조: `controller/`, `service/`, `repository/`, `domain/`, `dto/`
 
+## TDD 워크플로 (Phase 6~)
+
+test agent가 먼저 테스트를 작성한 뒤 server agent가 구현한다.
+
+1. test agent가 작성한 테스트 파일을 **스펙**으로 간주한다
+2. `./gradlew test --tests "<TestClass>"` 실행 → RED 확인
+3. 테스트를 통과하도록 구현 → GREEN
+4. 리팩토링 후 `./gradlew test` 재실행 → GREEN 유지
+
+**절대 하지 않는 것**: 테스트 바디 수정, `@Disabled` 스킵, 테스트를 구현에 맞게 바꾸기
+
 ## 개발 컨벤션
 
 - **Contract-first**: 엔드포인트 구현 전에 API 계약을 먼저 확정한다
