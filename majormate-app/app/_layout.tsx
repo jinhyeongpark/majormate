@@ -21,17 +21,22 @@ Notifications.setNotificationHandler({
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
-  const [authChecked, setAuthChecked] = useState(false);
+  // undefined = 아직 확인 중, false = 미로그인, true = 로그인됨
+  const [authState, setAuthState] = useState<boolean | undefined>(undefined);
   const router = useRouter();
 
   useEffect(() => {
     if (!fontsLoaded) return;
     tokenStorage.get().then((token) => {
-      if (token) router.replace('/(tabs)');
-      setAuthChecked(true);
+      setAuthState(!!token);
       SplashScreen.hideAsync();
     });
   }, [fontsLoaded]);
+
+  // Stack 마운트 후 로그인 상태면 탭으로 이동
+  useEffect(() => {
+    if (authState === true) router.replace('/(tabs)');
+  }, [authState]);
 
   // 포그라운드 알림 수신 — QA_REQUEST를 pending 목록에 저장
   useEffect(() => {
@@ -65,7 +70,7 @@ export default function RootLayout() {
     return () => subscription.remove();
   }, [router]);
 
-  if (!fontsLoaded || !authChecked) return null;
+  if (!fontsLoaded || authState === undefined) return null;
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
