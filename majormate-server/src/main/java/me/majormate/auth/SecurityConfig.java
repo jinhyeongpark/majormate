@@ -47,7 +47,9 @@ public class SecurityConfig {
                     "/login/**", "/oauth2/**",
                     "/ws/**",
                     "/api/majors",
-                    "/api/auth/google"
+                    "/api/auth/google",
+                    "/api/items",
+                    "/assets/characters/**"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

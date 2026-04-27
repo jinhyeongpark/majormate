@@ -47,7 +47,9 @@ spring:
             user-name-attribute: sub
 
 asset:
-  base-url: ${ASSET_BASE_URL:https://cdn.majormate.com}
+  # 프로덕션: ASSET_BASE_URL=https://cdn.majormate.com 환경변수로 재정의
+  # 개발 기본값: 서버 자체에서 /assets/characters/** 정적 파일 서빙
+  base-url: ${ASSET_BASE_URL:http://localhost:8082}
 
 firebase:
   service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:}
