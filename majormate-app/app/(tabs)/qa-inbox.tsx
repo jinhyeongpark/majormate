@@ -97,7 +97,7 @@ export default function QaInboxScreen() {
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + 16 }]}>
-      <Text style={styles.title}>QA INBOX</Text>
+      <Text style={styles.title}>CHAT ROOMS</Text>
 
       {loading ? (
         <ActivityIndicator color="#4FC3F7" style={{ marginTop: 40 }} />

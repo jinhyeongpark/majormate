@@ -7,6 +7,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ViewStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CharacterRenderer, { CharacterLayers } from '../../components/CharacterRenderer';
@@ -20,38 +21,14 @@ import { formatElapsed, useStopwatch } from '../../src/hooks/useStopwatch';
 
 const ICON_GROUPS = require('../../assets/icons/groups_icon.png');
 const ICON_ADD_FRIEND = require('../../assets/icons/add_friend_icon.png');
-const BTN_START = require('../../assets/icons/start_but.png');
-const BTN_STOP = require('../../assets/icons/stop_but.png');
-const BTN_END = require('../../assets/icons/end_but.png');
 const BUBBLE = require('../../assets/icons/sentence.png');
 
 type Panel = 'none' | 'friends' | 'rooms' | 'room';
 
 const SPEECHES: Record<string, string[]> = {
-  idle: [
-    'ready?',
-    "let's go!",
-    'focus up!',
-    'grind time!',
-    'tick tock!',
-    'start now!',
-  ],
-  running: [
-    'no quitting!',
-    'stay sharp!',
-    'on fire!',
-    'locked in!',
-    'keep going!',
-    'beast mode!',
-  ],
-  paused: [
-    'resting?',
-    'take 5!',
-    'come back!',
-    "don't quit!",
-    'hydrate!',
-    'back soon?',
-  ],
+  idle: ['ready?', "let's go!", 'focus up!', 'grind time!', 'tick tock!', 'start now!'],
+  running: ['no quitting!', 'stay sharp!', 'on fire!', 'locked in!', 'keep going!', 'beast mode!'],
+  paused: ['resting?', 'take 5!', 'come back!', "don't quit!", 'hydrate!', 'back soon?'],
 };
 
 function pickSpeech(status: string) {
@@ -59,10 +36,47 @@ function pickSpeech(status: string) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
+const BTN_DEFS = {
+  start: { bg: '#B8FF00', shadow: '#527000', text: '#0D1800' },
+  stop:  { bg: '#F4A261', shadow: '#8C4510', text: '#1A0A00' },
+  end:   { bg: '#E05252', shadow: '#8C1818', text: '#1A0000' },
+} as const;
+
+function PixelButton({
+  type,
+  label,
+  onPress,
+  style,
+}: {
+  type: keyof typeof BTN_DEFS;
+  label: string;
+  onPress: () => void;
+  style?: ViewStyle;
+}) {
+  const c = BTN_DEFS[type];
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={style}>
+      <View style={{ backgroundColor: c.shadow, paddingRight: 4, paddingBottom: 4 }}>
+        <View style={{ backgroundColor: c.bg, height: 52, alignItems: 'center', justifyContent: 'center' }}>
+          <Text
+            numberOfLines={1}
+            style={{ fontFamily: 'PressStart2P_400Regular', fontSize: 9, color: c.text, letterSpacing: 0 }}
+          >
+            {label}
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 export default function HomeScreen() {
   const [panel, setPanel] = useState<Panel>('none');
   const [currentRoom, setCurrentRoom] = useState<RoomSummary | null>(null);
   const [character, setCharacter] = useState<CharacterLayers>({ gender: 'male' });
+  const [nickname, setNickname] = useState<string | null>(null);
+  const [major, setMajor] = useState<string | null>(null);
+  const [gender, setGender] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
   const stopwatch = useStopwatch();
   const speech = useMemo(() => pickSpeech(stopwatch.status), [stopwatch.status]);
@@ -72,9 +86,17 @@ export default function HomeScreen() {
       .then((r) => r.json())
       .then((data) => setCharacter(data))
       .catch(() => {});
+
+    fetch(`${API_BASE_URL}/api/users/me`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((data) => {
+        setNickname(data.nickname ?? null);
+        setMajor(data.major ?? null);
+        setGender(data.gender ?? null);
+      })
+      .catch(() => {});
   }, []);
 
-  // FCM 토큰 등록 (물리 디바이스에서만 동작, 에뮬레이터 실패는 무시)
   useEffect(() => {
     registerFcmToken();
   }, []);
@@ -140,36 +162,35 @@ export default function HomeScreen() {
               {/* TODO(Phase 5): 공부 시작 시 캐릭터 장착 악세서리(노트북/커피) 모션 연출 */}
               <CharacterRenderer layers={character} size={200} />
             </View>
-            <Text style={styles.tags}># Computer Science # Male</Text>
+            <Text style={styles.nickname}>{nickname ?? '---'}</Text>
+            <Text style={styles.tags}>
+              {`#${major ?? '???'}  #${(gender ?? 'unknown').toLowerCase()}`}
+            </Text>
           </View>
         )}
       </View>
 
-      {/* Bottom controls */}
+      {/* Bottom controls — fixed height to prevent layout shift */}
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 16 }]}>
-        {stopwatch.status === 'running' ? (
-          <View style={styles.controlRow}>
-            <TouchableOpacity style={styles.controlBtn} onPress={stopwatch.pause} activeOpacity={0.8}>
-              <Image source={BTN_STOP} style={styles.controlBtnImg} resizeMode="stretch" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.controlBtn} onPress={stopwatch.end} activeOpacity={0.8}>
-              <Image source={BTN_END} style={styles.controlBtnImg} resizeMode="stretch" />
-            </TouchableOpacity>
-          </View>
-        ) : stopwatch.status === 'paused' ? (
-          <View style={styles.controlRow}>
-            <TouchableOpacity style={styles.controlBtn} onPress={stopwatch.resume} activeOpacity={0.8}>
-              <Image source={BTN_START} style={styles.controlBtnImg} resizeMode="stretch" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.controlBtn} onPress={stopwatch.end} activeOpacity={0.8}>
-              <Image source={BTN_END} style={styles.controlBtnImg} resizeMode="stretch" />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity onPress={stopwatch.start} activeOpacity={0.8}>
-            <Image source={BTN_START} style={styles.startButton} resizeMode="stretch" />
-          </TouchableOpacity>
-        )}
+        <View style={styles.controlRow}>
+          {stopwatch.status === 'running' ? (
+            <>
+              <PixelButton type="stop" label="STOP" onPress={stopwatch.pause} style={{ flex: 1 }} />
+              <PixelButton type="end" label="END" onPress={stopwatch.end} style={{ width: 96 }} />
+            </>
+          ) : stopwatch.status === 'paused' ? (
+            <>
+              <PixelButton type="start" label="RESUME" onPress={stopwatch.resume} style={{ flex: 1 }} />
+              <PixelButton type="end" label="END" onPress={stopwatch.end} style={{ width: 96 }} />
+            </>
+          ) : (
+            <>
+              <View style={{ flex: 1 }} />
+              <PixelButton type="start" label="START" onPress={stopwatch.start} style={{ width: 180 }} />
+              <View style={{ flex: 1 }} />
+            </>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -216,7 +237,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 10,
+    paddingTop: 60,
   },
   characterWrapper: {
     width: 200,
@@ -240,31 +262,25 @@ const styles = StyleSheet.create({
     color: '#222',
     textAlign: 'center',
   },
+  nickname: {
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 9,
+    color: '#fff',
+    letterSpacing: 1,
+  },
   tags: {
     fontFamily: 'PressStart2P_400Regular',
-    fontSize: 8,
-    color: '#888',
-    marginTop: 8,
+    fontSize: 7,
+    color: '#666',
+    letterSpacing: 1,
+    textAlign: 'center',
   },
   bottomBar: {
     paddingHorizontal: 20,
     paddingTop: 12,
   },
-  startButton: {
-    width: 134,
-    height: 64,
-    alignSelf: 'center',
-  },
   controlRow: {
     flexDirection: 'row',
-    gap: 8,
-  },
-  controlBtn: {
-    flex: 1,
-  },
-  controlBtnImg: {
-    width: '100%',
-    height: 56,
-    borderRadius: 8,
+    gap: 12,
   },
 });
