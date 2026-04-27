@@ -2,12 +2,15 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Modal,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { RoomDetail, RoomMember, RoomSummary, fetchRoom, leaveRoom } from '../src/api/rooms';
+import { sendQaRequest } from '../src/api/qa';
 
 interface Props {
   room: RoomSummary;
@@ -32,6 +35,9 @@ export default function RoomView({ room, onLeave }: Props) {
   const [detail, setDetail] = useState<RoomDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [tick, setTick] = useState(0);
+  const [askTarget, setAskTarget] = useState<RoomMember | null>(null);
+  const [askMessage, setAskMessage] = useState('');
+  const [sending, setSending] = useState(false);
 
   const load = useCallback(() => {
     fetchRoom(room.id)
@@ -55,6 +61,30 @@ export default function RoomView({ room, onLeave }: Props) {
   const handleLeave = async () => {
     await leaveRoom(room.id).catch(() => {});
     onLeave();
+  };
+
+  const handleAskQuestion = (member: RoomMember) => {
+    setAskTarget(member);
+    setAskMessage('');
+  };
+
+  const handleSendQuestion = async () => {
+    if (!askTarget) return;
+    setSending(true);
+    try {
+      await sendQaRequest(askTarget.userId, askMessage.trim() || undefined);
+      setAskTarget(null);
+      setAskMessage('');
+    } catch {
+      // 전송 실패 시 모달 유지
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleCancelAsk = () => {
+    setAskTarget(null);
+    setAskMessage('');
   };
 
   const members = detail?.members ?? [];
@@ -82,18 +112,69 @@ export default function RoomView({ room, onLeave }: Props) {
           data={members}
           keyExtractor={(m) => m.userId}
           numColumns={3}
-          renderItem={({ item }) => <MemberCard member={item} />}
+          renderItem={({ item }) => (
+            <MemberCard member={item} onAskQuestion={handleAskQuestion} />
+          )}
           showsVerticalScrollIndicator={false}
           extraData={tick}
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.grid}
         />
       )}
+
+      {/* 질문 요청 모달 */}
+      <Modal
+        visible={askTarget !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={handleCancelAsk}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>질문 요청</Text>
+            <Text style={styles.modalTarget}>
+              {askTarget?.nickname}에게 질문을 보냅니다
+            </Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="메시지 (선택, 최대 500자)"
+              placeholderTextColor="#555"
+              value={askMessage}
+              onChangeText={setAskMessage}
+              maxLength={500}
+              multiline
+              numberOfLines={3}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnCancel]}
+                onPress={handleCancelAsk}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.modalBtnText}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnSend, sending && styles.modalBtnDisabled]}
+                onPress={handleSendQuestion}
+                activeOpacity={0.7}
+                disabled={sending}
+              >
+                <Text style={styles.modalBtnText}>{sending ? '전송 중...' : '보내기'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
-function MemberCard({ member }: { member: RoomMember }) {
+interface MemberCardProps {
+  member: RoomMember;
+  onAskQuestion?: (member: RoomMember) => void;
+}
+
+function MemberCard({ member, onAskQuestion }: MemberCardProps) {
   const studying = member.status === 'STUDYING';
   const paused = member.status === 'PAUSED';
   const active = studying || paused;
@@ -116,7 +197,15 @@ function MemberCard({ member }: { member: RoomMember }) {
       ) : (
         <Text style={styles.keywordPlaceholder}>—</Text>
       )}
-      {member.allowQuestion && <Text style={styles.qIcon}>💬</Text>}
+      {member.allowQuestion && (
+        <TouchableOpacity
+          onPress={() => onAskQuestion?.(member)}
+          hitSlop={8}
+          activeOpacity={0.6}
+        >
+          <Text style={styles.qIcon}>💬</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -217,5 +306,66 @@ const styles = StyleSheet.create({
   qIcon: {
     fontSize: 10,
     marginTop: 2,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  modalBox: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
+  },
+  modalTitle: {
+    color: '#4FC3F7',
+    fontSize: 10,
+    fontFamily: 'PressStart2P_400Regular',
+    marginBottom: 8,
+  },
+  modalTarget: {
+    color: '#aaa',
+    fontSize: 12,
+    marginBottom: 16,
+  },
+  modalInput: {
+    backgroundColor: '#2A2A2A',
+    borderRadius: 8,
+    padding: 12,
+    color: '#fff',
+    fontSize: 13,
+    minHeight: 80,
+    textAlignVertical: 'top',
+    marginBottom: 16,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalBtnCancel: {
+    backgroundColor: '#2A2A2A',
+  },
+  modalBtnSend: {
+    backgroundColor: '#4FC3F7',
+  },
+  modalBtnDisabled: {
+    opacity: 0.5,
+  },
+  modalBtnText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700',
   },
 });
