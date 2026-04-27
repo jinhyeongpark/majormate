@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
 import java.util.Optional;
@@ -27,10 +28,13 @@ public class MobileGoogleAuthService {
     private final RestTemplate restTemplate;
 
     private static final String USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
+    private static final String TOKENINFO_URL = "https://oauth2.googleapis.com/tokeninfo";
 
     @Transactional
-    public GoogleAuthResponse authenticate(String accessToken) {
-        Map<String, Object> info = fetchUserInfo(accessToken);
+    public GoogleAuthResponse authenticate(String idToken, String accessToken) {
+        Map<String, Object> info = idToken != null && !idToken.isBlank()
+                ? fetchUserInfoByIdToken(idToken)
+                : fetchUserInfoByAccessToken(accessToken);
 
         Boolean emailVerified = Boolean.valueOf(String.valueOf(info.get("email_verified")));
         if (!Boolean.TRUE.equals(emailVerified)) {
@@ -50,7 +54,19 @@ public class MobileGoogleAuthService {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> fetchUserInfo(String accessToken) {
+    private Map<String, Object> fetchUserInfoByIdToken(String idToken) {
+        String url = UriComponentsBuilder.fromHttpUrl(TOKENINFO_URL)
+                .queryParam("id_token", idToken)
+                .toUriString();
+        try {
+            return restTemplate.getForObject(url, Map.class);
+        } catch (HttpClientErrorException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Google ID token");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> fetchUserInfoByAccessToken(String accessToken) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
         try {

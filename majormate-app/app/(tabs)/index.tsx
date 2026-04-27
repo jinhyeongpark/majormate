@@ -14,6 +14,7 @@ import FriendsPanel from '../../components/FriendsPanel';
 import RoomsPanel from '../../components/RoomsPanel';
 import RoomView from '../../components/RoomView';
 import { API_BASE_URL } from '../../constants/api';
+import { registerFcmToken } from '../../src/api/notifications';
 import { RoomSummary } from '../../src/api/rooms';
 import { formatElapsed, useStopwatch } from '../../src/hooks/useStopwatch';
 
@@ -71,6 +72,11 @@ export default function HomeScreen() {
       .then((r) => r.json())
       .then((data) => setCharacter(data))
       .catch(() => {});
+  }, []);
+
+  // FCM 토큰 등록 (물리 디바이스에서만 동작, 에뮬레이터 실패는 무시)
+  useEffect(() => {
+    registerFcmToken();
   }, []);
 
   const toggleOverlay = (target: 'friends' | 'rooms') => {

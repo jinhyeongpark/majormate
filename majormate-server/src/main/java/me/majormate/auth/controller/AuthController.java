@@ -32,7 +32,7 @@ public class AuthController {
     @PostMapping("/google")
     public ResponseEntity<GoogleAuthResponse> googleMobileAuth(
             @Valid @RequestBody GoogleAuthRequest request) {
-        return ResponseEntity.ok(mobileGoogleAuthService.authenticate(request.accessToken()));
+        return ResponseEntity.ok(mobileGoogleAuthService.authenticate(request.idToken(), request.accessToken()));
     }
 
     @PostMapping("/logout")
