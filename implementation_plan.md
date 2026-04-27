@@ -1,4 +1,4 @@
-# MajorMate 초기 개발 로드맵 및 구현 계획 (Implementation Plan)
+﻿# MajorMate 초기 개발 로드맵 및 구현 계획 (Implementation Plan)
 
 PRD.md에 파악된 철학과 핵심 기술 스택을 바탕으로 백엔드와 프론트엔드의 병렬 개발 로드맵을 수립했습니다. 모든 기능 개발은 Contract-First 원칙을 가장 최우선으로 진행하게 됩니다.
 
@@ -41,7 +41,7 @@ PRD.md에 파악된 철학과 핵심 기술 스택을 바탕으로 백엔드와 
   - `CharacterService.getCharacter()` 에서 각 레이어 경로(bottom, top, shoes, hair 등)를 CloudFront URL로 변환하여 응답.
   - `CharacterItemService`의 아이템 목록/생성/수정 응답의 `filePath`도 CloudFront URL로 변환하여 반환.
   - **설계 원칙**: DB/관리자 입력은 S3 키 경로(상대 경로)로 저장, 응답 시에만 base-url prefix 적용.
-- [ ] **프론트엔드 작업 지시**
+- [x] **프론트엔드 작업 지시**
   - 캐릭터 렌더링 엔진을 로컬 `require('./assets/characters/...')` 방식에서 **서버 API가 반환하는 CloudFront URL 기반 원격 이미지 로딩**으로 교체.
   - `Image source={{ uri: url }}` 방식으로 변경하고, `url`이 `null`인 경우(미장착) 해당 레이어 렌더링을 건너뜀.
   - 원격 이미지 로딩 중 로딩 상태(스켈레톤 또는 fade-in) 처리 추가.
@@ -88,25 +88,37 @@ PRD.md에 파악된 철학과 핵심 기술 스택을 바탕으로 백엔드와 
     - `POST /api/qa/{requestId}/reject` — 거절 → 요청자에게 거절 알림.
     - WebSocket 채팅 메시지 송수신 및 채팅 내역 DB(`chat_messages`) 저장.
   - 주별/월별 학습 시간 통계 및 키워드 추출 API 엔드포인트 구현.
-- [ ] **프론트엔드 작업 지시**
+- [x] **프론트엔드 작업 지시**
   - FCM 디바이스 토큰 획득(Expo Notifications) 및 서버 등록 처리.
   - 푸시 알림 수신 시 딥링크 라우팅 처리 (질문 채팅방 / 친구 목록).
   - 그룹 목록에서 질문받기 허용 유저 선택 시 질문 요청 전송 UI 제공.
   - 질문 요청 수락/거절 알림 수신 및 수락 시 1:1 채팅방 화면으로 자동 전환.
   - 통계 데이터 시각화 차트(진척도 파악용)를 Dashboard 형태로 노출.
 
-> **🔧 미해결: Android 빌드 오류 (다음 세션에서 이어서 진행)**
+> **✅ Android 빌드 오류 해결 완료**
 >
-> USB 디버깅 기기(`R3CY80H51TX`)에 앱을 설치하려다 Gradle 빌드 실패.
+> **원인**: `expo-linking@55.x`, `expo-splash-screen@55.x` (SDK 55 패키지)가 잘못 설치되어 `expo-constants@55.x`가 혼입됨. `expo@54.x`는 `expo-constants@18.x`를 요구하는데 버전 불일치로 Kotlin 컴파일 실패.
 >
-> **원인**: `expo-modules-autolinking` 3.0.24가 `org.gradle.internal.extensions.core.extra` API를 사용하는데, 이 API는 Gradle 8.9 이상에서만 존재함.
+> **해결**:
+> - `gradle-wrapper.properties`: `gradle-8.13-bin.zip` (AGP 최소 요구사항 충족)
+> - `package.json`: `expo-linking ~8.0.11`, `expo-splash-screen ~31.0.13` (SDK 54 호환 버전)
+> - `AndroidManifest.xml`: `android:name`을 `.MainApplication` → `me.majormate.app.MainApplication` 전체 경로로 수정 (namespace `com.majormate` ≠ package `me.majormate.app` 불일치)
+> - `npm install --legacy-peer-deps` 후 빌드 성공, 기기(SM_S931N) 설치 확인
+
+> **🔧 미해결: Google 소셜 로그인 검증 (다음 세션에서 이어서 진행)**
 >
-> **현재 상태**: `gradle-wrapper.properties`의 Gradle 버전을 `8.10.2`로 수정한 상태 (미검증).
+> 앱 설치 후 Google 로그인 버튼 클릭 시 "액세스 차단됨: 이 앱의 요청이 잘못되었습니다" 오류 발생.
 >
-> **다음 세션 할 일**:
-> 1. `majormate-app/` 디렉터리에서 `npx expo run:android` 실행
-> 2. 빌드 성공 여부 확인, 실패 시 에러 메시지 보고 추가 수정
-> 3. 기기에 앱 정상 설치/실행 확인
+> **조치 완료**: Google Cloud Console → Android OAuth 클라이언트(`310034142126-d0l9tssbtourqr4mhsqfjthg2mngc8ji`)에 패키지명 `com.majormate`, SHA-1 `9B:5E:30:1C:1C:68:EE:85:29:89:1F:31:F3:EF:F0:2A:B6:06:55:DB` 저장함 (반영까지 수 분 소요).
+>
+> **조치 완료 (2026-04-27)**:
+> - **근본 원인**: `android/app/debug.keystore`(SHA-1: `5E:8F:16...`)가 Google Cloud Console에 등록된 시스템 keystore(SHA-1: `9B:5E:30...`)와 달랐음.
+> - `android/app/build.gradle` signing config를 `System.getProperty("user.home") + "/.android/debug.keystore"` (시스템 keystore)로 수정.
+> - Spring Security `SecurityConfig`에 `SessionCreationPolicy.STATELESS` + `HttpStatusEntryPoint(401)` 추가 → OAuth2 302 리다이렉트 제거.
+> - `MobileGoogleAuthService`를 `idToken` 우선 검증 (tokeninfo API) / `accessToken` 폴백으로 개선.
+> - 앱을 새 서명으로 재빌드·설치 (`adb uninstall` → `adb install`).
+> - 서버 가동: `./gradlew bootRun --args='--spring.profiles.active=local'`
+> - Metro 가동: `npx expo start --port 8081`
 
 ---
 
@@ -203,22 +215,25 @@ PRD.md에 파악된 철학과 핵심 기술 스택을 바탕으로 백엔드와 
 
 ### Phase 7: 수익화 (Monetization)
 
-> Phase 6 완료 후 착수. PRD §4 Monetization 참고.
+> Phase 6 완료 후 착수.
 
 - [ ] **백엔드 작업 지시**
-  - 인앱 구독 플랜(`FREE | PRO`) 엔티티 및 상태 관리 API.
-  - Apple / Google Play 영수증 검증 Webhook 수신 엔드포인트.
-  - PRO 전용 기능 게이팅 미들웨어 (커스텀 그룹 생성 개수 제한 등).
+  - 사용자 포인트(Point) 관리 엔티티 및 보유량 조회/업데이트 API 구현.
+  - 인앱 결제(IAP)를 통한 포인트 충전 비즈니스 로직 및 영수증 검증 Webhook 수신 엔드포인트 구현 (1000원: 1000P, 5000원: 5500P, 10000원: 12000P).
+  - 사용자 아이템 소유권(보유 여부) 관리 엔티티 구현 및 아이템 구매 API 개발 (잔여 포인트 확인, 차감 및 소유권 부여 트랜잭션).
 - [ ] **프론트엔드 작업 지시**
-  - 구독 플랜 선택 화면 및 인앱 결제 플로우 구현 (Expo IAP).
-  - PRO 기능 접근 시 업그레이드 유도 모달 처리.
+  - 홈 화면의 내 캐릭터 터치 시 '캐릭터 커스텀 화면'으로 이동하는 라우팅 추가.
+  - 캐릭터 커스텀 화면 상단에 현재 보유 포인트(Point) 표시 및 포인트 충전소 진입 버튼/모달 구현 (포인트 충전 패키지 3종 제공).
+  - 아이템 상점/인벤토리 렌더링 시 내가 가지지 못한(미보유) 아이템에 대해 약간의 블러 처리 및 자물쇠 아이콘(도트/픽셀 스타일) 노출.
+  - 자물쇠가 있는 아이템 클릭 시 아이템 이미지, 이름, 가격이 표시되는 구매 확인 팝업 모달 노출 및 결제(포인트 차감) 플로우 연결.
+  - 아이템 구매 완료 시 즉시 장착 처리되며, 착용된 아이템에는 체크 표시가 뜨고 캐릭터 렌더링에 실시간 반영.
 
 ---
 
 ## Open Questions
 
 > [!WARNING]
-> 현재 로드맵에서 1차 목표인 코어 기능에 집중하기 위해 PRD의 \4. Monetization (Income Model)\ 관련 추가 과제(결제 및 구독 적용)는 Phase 6 이후로 보류하려 합니다. 최소 기능 제품(MVP) 배포를 기준으로 이 방향성에 동의하시는지 확인을 요청드립니다.
+> 현재 로드맵에서 1차 목표인 코어 기능에 집중하기 위해 도입되는 포인트 결제 시스템은 Phase 6 이후의 최우선 작업으로 진행될 예정입니다. MVP 수준에서의 앱 내 경제 시스템(인앱 결제 및 포인트 차감)이 이 구조로 충분한지 확인을 요청드립니다.
 
 ## Verification Plan
 
