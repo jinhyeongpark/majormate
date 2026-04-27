@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew bootRun --args='--spring.profiles.active=local')",
+      "Bash(echo \"Server starting with PID $!\")"
+    ]
+  }
+}
