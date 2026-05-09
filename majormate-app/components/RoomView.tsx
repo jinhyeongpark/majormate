@@ -95,7 +95,7 @@ export default function RoomView({ room, onLeave }: Props) {
         <View>
           <Text style={styles.roomName}>{room.name}</Text>
           <Text style={styles.roomMeta}>
-            {room.major}  ·  {members.length}/{room.maxMembers}
+            {room.major ? `${room.major}  ·  ` : ''}{members.length}/{room.maxMembers}
           </Text>
         </View>
         <TouchableOpacity onPress={handleLeave} style={styles.leaveButton} activeOpacity={0.7}>

@@ -46,8 +46,8 @@ export default function MajorSearchInput({ value, onChange }: Props) {
 
   const handleSelect = (major: Major) => {
     selected.current = true;
-    setQuery(major.nameKo);
-    onChange(major.nameKo);
+    setQuery(major.nameEn);
+    onChange(major.nameEn);
     setOpen(false);
   };
 

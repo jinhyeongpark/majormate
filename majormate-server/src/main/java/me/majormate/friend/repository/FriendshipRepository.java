@@ -15,4 +15,8 @@ public interface FriendshipRepository extends JpaRepository<Friendship, UUID> {
 
     @Query("SELECT f FROM Friendship f WHERE f.requester = :user OR f.addressee = :user")
     List<Friendship> findAllByUser(@Param("user") User user);
+
+    default boolean areFriends(User a, User b) {
+        return existsByRequesterAndAddressee(a, b) || existsByRequesterAndAddressee(b, a);
+    }
 }

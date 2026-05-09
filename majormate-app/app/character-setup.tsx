@@ -21,7 +21,7 @@ interface CharacterItem {
 
 type ItemsByLayer = Record<LayerKey, CharacterItem[]>;
 
-const LAYER_ORDER: LayerKey[] = ['hair', 'top', 'bottom', 'shoes'];
+const LAYER_ORDER: LayerKey[] = ['hair', 'top', 'bottom', 'shoes', 'bag', 'glasses', 'item'];
 
 const LAYER_LABELS: Record<LayerKey, string> = {
   bottom: 'BOTTOM',

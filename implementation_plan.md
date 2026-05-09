@@ -147,7 +147,7 @@ PRD.md에 파악된 철학과 핵심 기술 스택을 바탕으로 백엔드와 
 
 #### 미완료 — 다음 세션에서 이어서 진행
 
-- [ ] **서버: 아이템 API 구현** (`majormate-server/`)
+- [x] **서버: 아이템 API 구현** (`majormate-server/`)
   - `Item` 엔티티 (`me.majormate.character.domain`): `id(UUID)`, `category(String)`, `name`, `price(int)`, `filePath(String)`
   - `ItemRepository`: `findAllByOrderByCategoryAscNameAsc()`
   - `ItemController`: `GET /api/items` — 인증 불필요, 전체 아이템 목록 반환
@@ -158,7 +158,7 @@ PRD.md에 파악된 철학과 핵심 기술 스택을 바탕으로 백엔드와 
   - `filePath` 형식: `http://localhost:8082/assets/characters/{category}/{filename}`
   - 시드 데이터는 `assets/characters/` 실제 PNG 파일 목록 기반으로 생성
 
-- [ ] **앱: 캐릭터 셋업 연동 확인** (`app/character-setup.tsx`)
+- [x] **앱: 캐릭터 셋업 연동 확인** (`app/character-setup.tsx`)
   - `/api/items` 응답으로 아이템 썸네일이 정상 표시되는지 확인
   - 아이템 선택 → PUT `/api/users/me/character` → 홈 화면 캐릭터 반영까지 E2E 검증
 
@@ -176,7 +176,7 @@ PRD.md에 파악된 철학과 핵심 기술 스택을 바탕으로 백엔드와 
 
 ---
 
-- [ ] **백엔드 작업 지시**
+- [x] **백엔드 작업 지시**
 
   **스키마 변경**
   - `rooms` 테이블: `created_by(userId)` 컬럼 추가 (CUSTOM 방 생성자 추적용).
@@ -226,7 +226,7 @@ PRD.md에 파악된 철학과 핵심 기술 스택을 바탕으로 백엔드와 
 
 ---
 
-- [ ] **프론트엔드 작업 지시**
+- [x] **프론트엔드 작업 지시**
 
   **`src/api/rooms.ts` 확장**
   - 기존 `rooms.ts`에 타입 및 함수 추가.
@@ -252,6 +252,51 @@ PRD.md에 파악된 철학과 핵심 기술 스택을 바탕으로 백엔드와 
 
   **`app/(tabs)/index.tsx` 수정**
   - `RoomsPanel`에 새 props 전달 구조 반영 (패널 탭 상태 등).
+
+---
+
+### Phase 6.5: 프로필 모달 & 로그아웃 (UI 개선)
+
+#### 개요
+
+홈 화면에서 닉네임을 탭하면 프로필 모달이 열리고, LOGOUT 버튼으로 앱에서 로그아웃할 수 있다.
+
+---
+
+- [x] **프론트엔드 — ProfileModal 구현 완료**
+  - `components/ProfileModal.tsx` 신규 작성. `absoluteFill` View 기반 오버레이 (Android Modal 터치 버그 회피).
+  - LOGOUT / CLOSE 버튼 구현. `gender` 프롭 제거, `#major` 태그만 표시.
+  - `app/(tabs)/index.tsx`에서 닉네임 탭 → `profileVisible` 상태로 열기.
+
+- [x] **기타 홈 화면 개선 완료**
+  - 홈 화면 전공명 영문 표기 (`MajorSearchInput.handleSelect` → `major.nameEn` 저장).
+  - 성별 태그 제거 (영문 전공명이 길어 UI 혼잡).
+  - `app/(tabs)/index.tsx` 데이터 로딩 버그 수정: `fetch + credentials:include` → `apiClient.get()` (Bearer 토큰 인터셉터 사용).
+  - `app/onboarding.tsx` 동일 버그 수정.
+
+- [x] **로그아웃 기능 수정 필요 (미해결)**
+
+  **증상**
+  - LOGOUT 버튼 탭 시 `Alert("로그아웃 시작")` Alert 이 뜨는 것 확인 → `handleLogout` 함수 진입은 정상.
+  - `router.replace('/')` 호출 직후 "Uncaught" 에러 발생 → 화면 전환 실패.
+  - 앱을 완전히 재시작하면 로그아웃된 상태이지만, 버튼 탭만으로는 전환이 안 됨.
+
+  **원인 분석**
+  - `app/index.tsx`에 `useEffect(() => { tokenStorage.get().then(token => { if (token) router.replace('/(tabs)') }) }, [])` 가 있었음.
+  - 로그아웃 시 `router.replace('/')` 로 login 화면이 마운트되는 도중 위 effect 가 발화 → AsyncStorage 에서 stale 토큰을 읽어 `router.replace('/(tabs)')` 역방향 호출 → React Navigation Invariant Violation 충돌.
+  - 현재는 해당 effect 를 `app/index.tsx`에서 제거하고, `app/_layout.tsx` 폰트 로드 effect 에서 단 한 번만 토큰 확인하도록 이동했으나 여전히 동작 안 함.
+
+  **지금까지 시도한 것들**
+  - `_layout.tsx`에 `useSegments` 기반 반응형 auth 가드 추가 → 로그아웃 후 즉시 `/(tabs)` 재이동 발생해 제거.
+  - `ProfileModal`을 `<Modal>` → `absoluteFill View` 로 교체 (Android 터치 이슈).
+  - `handleLogout` 내부에 `console.log` / `Alert` 추가해 진입 확인 → 진입은 되나 전환 실패.
+  - `app/index.tsx` useEffect 제거 + `_layout.tsx` 단일 토큰 체크로 이동 → 여전히 "Uncaught" 에러.
+
+  **다음 시도 후보**
+  - `router.replace('/')` 대신 `router.navigate('/')` 또는 `router.dismissAll()` 사용 시도.
+  - `setTimeout(() => router.replace('/'), 0)` 으로 현재 이벤트 루프 이후 전환 시도.
+  - Expo Router `<Redirect>` 컴포넌트를 상태 기반으로 사용하는 방식으로 전환.
+  - `tokenStorage.remove()` 완료 후 Zustand/Context 전역 auth 상태를 `null`로 변경 → `_layout.tsx`에서 해당 상태를 watch해 `router.replace('/')` 호출.
 
 ---
 

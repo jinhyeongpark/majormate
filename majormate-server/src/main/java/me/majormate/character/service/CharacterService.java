@@ -29,8 +29,16 @@ public class CharacterService {
         CharacterLayer layer = characterRepository.findByUser(user)
                 .orElseGet(() -> CharacterLayer.builder().user(user).gender("male").build());
 
-        layer.update(req.bottom(), req.top(), req.shoes(), req.hair(),
-                req.bag(), req.glasses(), req.item(), req.gender());
+        layer.update(
+                assetUrlService.toPath(req.bottom()),
+                assetUrlService.toPath(req.top()),
+                assetUrlService.toPath(req.shoes()),
+                assetUrlService.toPath(req.hair()),
+                assetUrlService.toPath(req.bag()),
+                assetUrlService.toPath(req.glasses()),
+                assetUrlService.toPath(req.item()),
+                req.gender()
+        );
         return toResponse(characterRepository.save(layer));
     }
 
