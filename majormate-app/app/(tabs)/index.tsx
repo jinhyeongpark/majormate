@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   Image,
   ImageBackground,
   Pressable,
@@ -12,10 +13,13 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CharacterRenderer, { CharacterLayers } from '../../components/CharacterRenderer';
 import FriendsPanel from '../../components/FriendsPanel';
+import ProfileModal from '../../components/ProfileModal';
 import RoomsPanel from '../../components/RoomsPanel';
 import RoomView from '../../components/RoomView';
-import { API_BASE_URL } from '../../constants/api';
+import { useAuth } from '../../src/auth/AuthContext';
+import { apiClient } from '../../src/api/client';
 import { registerFcmToken } from '../../src/api/notifications';
+import { tokenStorage } from '../../src/auth/tokenStorage';
 import { RoomSummary } from '../../src/api/rooms';
 import { formatElapsed, useStopwatch } from '../../src/hooks/useStopwatch';
 
@@ -71,28 +75,26 @@ function PixelButton({
 }
 
 export default function HomeScreen() {
+  const { setAuthenticated } = useAuth();
   const [panel, setPanel] = useState<Panel>('none');
   const [currentRoom, setCurrentRoom] = useState<RoomSummary | null>(null);
   const [character, setCharacter] = useState<CharacterLayers>({ gender: 'male' });
   const [nickname, setNickname] = useState<string | null>(null);
   const [major, setMajor] = useState<string | null>(null);
-  const [gender, setGender] = useState<string | null>(null);
+  const [profileVisible, setProfileVisible] = useState(false);
   const insets = useSafeAreaInsets();
   const stopwatch = useStopwatch();
   const speech = useMemo(() => pickSpeech(stopwatch.status), [stopwatch.status]);
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/users/me/character`, { credentials: 'include' })
-      .then((r) => r.json())
-      .then((data) => setCharacter(data))
+    apiClient.get('/api/users/me/character')
+      .then((r) => setCharacter(r.data))
       .catch(() => {});
 
-    fetch(`${API_BASE_URL}/api/users/me`, { credentials: 'include' })
-      .then((r) => r.json())
-      .then((data) => {
-        setNickname(data.nickname ?? null);
-        setMajor(data.major ?? null);
-        setGender(data.gender ?? null);
+    apiClient.get('/api/users/me')
+      .then((r) => {
+        setNickname(r.data.nickname ?? null);
+        setMajor(r.data.major ?? null);
       })
       .catch(() => {});
   }, []);
@@ -114,6 +116,11 @@ export default function HomeScreen() {
   const handleLeaveRoom = () => {
     setCurrentRoom(null);
     setPanel('none');
+  };
+
+  const handleLogout = async () => {
+    await tokenStorage.remove();
+    setAuthenticated(false);
   };
 
   return (
@@ -162,9 +169,11 @@ export default function HomeScreen() {
               {/* TODO(Phase 5): 공부 시작 시 캐릭터 장착 악세서리(노트북/커피) 모션 연출 */}
               <CharacterRenderer layers={character} size={200} />
             </View>
-            <Text style={styles.nickname}>{nickname ?? '---'}</Text>
+            <TouchableOpacity onPress={() => setProfileVisible(true)} hitSlop={8}>
+              <Text style={styles.nickname}>{nickname ?? '---'}</Text>
+            </TouchableOpacity>
             <Text style={styles.tags}>
-              {`#${major ?? '???'}  #${(gender ?? 'unknown').toLowerCase()}`}
+              {`#${major ?? '???'}`}
             </Text>
           </View>
         )}
@@ -192,6 +201,13 @@ export default function HomeScreen() {
           )}
         </View>
       </View>
+      <ProfileModal
+        visible={profileVisible}
+        onClose={() => setProfileVisible(false)}
+        onLogout={handleLogout}
+        nickname={nickname}
+        major={major}
+      />
     </View>
   );
 }

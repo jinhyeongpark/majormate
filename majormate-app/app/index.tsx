@@ -2,10 +2,12 @@ import { AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useAuth } from '../src/auth/AuthContext';
 import { useGoogleLogin } from '../src/auth/useGoogleLogin';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { setAuthenticated } = useAuth();
   const { login, ready } = useGoogleLogin();
   const [loading, setLoading] = useState(false);
 
@@ -13,6 +15,7 @@ export default function LoginScreen() {
     try {
       setLoading(true);
       const { isNewUser } = await login();
+      setAuthenticated(true);
       router.replace(isNewUser ? '/onboarding' : '/(tabs)');
     } catch {
       Alert.alert('로그인 실패', '다시 시도해주세요.');

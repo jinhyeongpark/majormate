@@ -9,8 +9,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { apiClient } from '../src/api/client';
 import MajorSearchInput from '../components/MajorSearchInput';
-import { API_BASE_URL } from '../constants/api';
 
 const GENDERS = [
   { label: 'MALE', value: 'MALE' },
@@ -35,14 +35,7 @@ export default function OnboardingScreen() {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/users/me`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ nickname, major, nationality, gender }),
-      });
-
-      if (!res.ok) throw new Error('프로필 저장 실패');
+      await apiClient.patch('/api/users/me', { nickname, major, nationality, gender });
     } catch {
       // 백엔드 미연동 시에도 UI 플로우 진행
     }
