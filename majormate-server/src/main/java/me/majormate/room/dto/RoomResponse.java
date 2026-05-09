@@ -8,5 +8,6 @@ public record RoomResponse(
         String type,
         String major,
         int memberCount,
-        int maxMembers
+        int maxMembers,
+        boolean createdByMe
 ) {}

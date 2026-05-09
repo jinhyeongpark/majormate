@@ -11,6 +11,7 @@ import java.util.UUID;
 
 public interface RoomMemberRepository extends JpaRepository<RoomMember, UUID> {
     List<RoomMember> findAllByRoom(Room room);
+    List<RoomMember> findAllByUser(User user);
     Optional<RoomMember> findByRoomAndUser(Room room, User user);
     boolean existsByRoomAndUser(Room room, User user);
     void deleteByRoomAndUser(Room room, User user);
