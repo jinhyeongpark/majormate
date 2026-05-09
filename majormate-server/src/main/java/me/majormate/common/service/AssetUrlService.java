@@ -14,4 +14,12 @@ public class AssetUrlService {
         if (path == null || path.isBlank()) return null;
         return baseUrl + "/" + path;
     }
+
+    /** 전체 URL에서 base-url prefix를 제거해 상대 경로로 변환한다. 이미 상대 경로면 그대로 반환. */
+    public String toPath(String url) {
+        if (url == null || url.isBlank()) return null;
+        String prefix = baseUrl + "/";
+        if (url.startsWith(prefix)) return url.substring(prefix.length());
+        return url;
+    }
 }
