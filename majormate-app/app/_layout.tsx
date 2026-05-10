@@ -19,28 +19,20 @@ Notifications.setNotificationHandler({
   }),
 });
 
-// 인증 상태에 따라 최초 1회 초기 라우팅 + 이후 로그아웃 감지
+// 최초 1회 기동 시 초기 라우팅만 담당 (로그아웃은 (tabs)/_layout.tsx의 <Redirect>가 처리)
 function AuthRedirect({ isAuthenticated }: { isAuthenticated: boolean | null }) {
   const router = useRouter();
   const initializedRef = useRef(false);
 
   useEffect(() => {
-    if (isAuthenticated === null) return; // 아직 토큰 확인 중
+    if (isAuthenticated === null) return;
+    if (initializedRef.current) return;
 
-    if (!initializedRef.current) {
-      // 최초 인증 상태 확인 완료 — 적절한 화면으로 이동 후 스플래시 제거
-      initializedRef.current = true;
-      if (isAuthenticated) {
-        router.replace('/(tabs)');
-      }
-      SplashScreen.hideAsync();
-      return;
+    initializedRef.current = true;
+    if (isAuthenticated) {
+      router.replace('/(tabs)');
     }
-
-    // 이후 변화: 로그아웃 시에만 로그인 화면으로 이동
-    if (!isAuthenticated) {
-      router.replace('/');
-    }
+    SplashScreen.hideAsync();
   }, [isAuthenticated]);
 
   return null;
@@ -79,9 +71,21 @@ function NotificationHandler() {
   return null;
 }
 
-function RootNavigator({ isAuthenticated }: { isAuthenticated: boolean | null }) {
+export default function RootLayout() {
+  const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
+  const [isAuthenticated, setAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!fontsLoaded) return;
+    tokenStorage.get().then((token) => {
+      setAuthenticated(!!token);
+    });
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
+
   return (
-    <>
+    <AuthContext.Provider value={{ isAuthenticated, setAuthenticated }}>
       <AuthRedirect isAuthenticated={isAuthenticated} />
       <NotificationHandler />
       <Stack screenOptions={{ headerShown: false }}>
@@ -91,29 +95,6 @@ function RootNavigator({ isAuthenticated }: { isAuthenticated: boolean | null })
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="qa/chat/[chatRoomId]" />
       </Stack>
-    </>
-  );
-}
-
-export default function RootLayout() {
-  const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
-  const [isAuthenticated, setAuthenticated] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    if (!fontsLoaded) return;
-    // SplashScreen.hideAsync()는 AuthRedirect에서 토큰 확인 후 호출
-    tokenStorage.get().then((token) => {
-      setAuthenticated(!!token);
-    });
-  }, [fontsLoaded]);
-
-  // 폰트 로드 전에만 null 반환 (스플래시 유지)
-  // isAuthenticated === null 이어도 Stack은 렌더링 — 스플래시가 가려줌
-  if (!fontsLoaded) return null;
-
-  return (
-    <AuthContext.Provider value={{ isAuthenticated, setAuthenticated }}>
-      <RootNavigator isAuthenticated={isAuthenticated} />
     </AuthContext.Provider>
   );
 }

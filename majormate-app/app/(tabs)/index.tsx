@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   Image,
   ImageBackground,
   Pressable,
@@ -16,6 +15,7 @@ import FriendsPanel from '../../components/FriendsPanel';
 import ProfileModal from '../../components/ProfileModal';
 import RoomsPanel from '../../components/RoomsPanel';
 import RoomView from '../../components/RoomView';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useAuth } from '../../src/auth/AuthContext';
 import { apiClient } from '../../src/api/client';
 import { registerFcmToken } from '../../src/api/notifications';
@@ -119,8 +119,14 @@ export default function HomeScreen() {
   };
 
   const handleLogout = async () => {
-    await tokenStorage.remove();
-    setAuthenticated(false);
+    try {
+      setProfileVisible(false);
+      await apiClient.post('/api/auth/logout').catch(() => {});
+      await GoogleSignin.signOut().catch(() => {});
+      await tokenStorage.remove();
+    } finally {
+      setAuthenticated(false);
+    }
   };
 
   return (
