@@ -1,6 +1,10 @@
+import { useNavigation } from '@react-navigation/core';
+import { CommonActions } from '@react-navigation/routers';
 import { Tabs } from 'expo-router';
+import { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../../src/auth/AuthContext';
 
 // ── Pixel art maps (1=on, 0=off) ────────────────────────────────────────────
 
@@ -67,7 +71,18 @@ function PixLabel({ label, color }: { label: string; color: string }) {
 // ── Layout ───────────────────────────────────────────────────────────────────
 
 export default function TabsLayout() {
+  const { isAuthenticated } = useAuth();
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    if (isAuthenticated === false) {
+      navigation.dispatch(
+        CommonActions.reset({ index: 0, routes: [{ name: 'index' }] })
+      );
+    }
+  }, [isAuthenticated, navigation]);
+
   return (
     <Tabs
       screenOptions={{
