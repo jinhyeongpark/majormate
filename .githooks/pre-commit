@@ -1,0 +1,42 @@
+#!/bin/sh
+# Pre-commit hook: lint/build/test for changed areas only
+
+STAGED=$(git diff --cached --name-only)
+
+run_server_checks() {
+  echo "→ [Server] build + test..."
+  cd majormate-server || exit 1
+  ./gradlew build
+  STATUS=$?
+  cd ..
+  if [ $STATUS -ne 0 ]; then
+    echo "✗ Server build/test failed. Commit aborted."
+    exit 1
+  fi
+  echo "✓ Server OK"
+}
+
+run_app_checks() {
+  echo "→ [App] type check..."
+  cd majormate-app || exit 1
+  npx tsc --noEmit
+  STATUS=$?
+  cd ..
+  if [ $STATUS -ne 0 ]; then
+    echo "✗ App type check failed. Commit aborted."
+    exit 1
+  fi
+  echo "✓ App OK"
+}
+
+SERVER_CHANGED=$(echo "$STAGED" | grep "^majormate-server/")
+APP_CHANGED=$(echo "$STAGED" | grep "^majormate-app/")
+
+if [ -z "$SERVER_CHANGED" ] && [ -z "$APP_CHANGED" ]; then
+  exit 0
+fi
+
+[ -n "$SERVER_CHANGED" ] && run_server_checks
+[ -n "$APP_CHANGED" ] && run_app_checks
+
+exit 0
