@@ -51,6 +51,9 @@ asset:
   # 개발 기본값: 서버 자체에서 /assets/characters/** 정적 파일 서빙
   base-url: ${ASSET_BASE_URL:http://localhost:8082}
 
+upload:
+  dir: ${UPLOAD_DIR:./uploads}
+
 firebase:
   service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:}
 

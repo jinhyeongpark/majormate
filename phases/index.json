@@ -1,0 +1,19 @@
+{
+  "phases": [
+    { "dir": "1-contract-first",    "name": "기반 설정 및 API 명세",              "status": "completed" },
+    { "dir": "2-user-profile",      "name": "사용자 프로필 & 캐릭터 시스템",      "status": "completed" },
+    { "dir": "2-5-asset-serving",   "name": "에셋 서빙 — CloudFront URL 통합",   "status": "completed" },
+    { "dir": "3-friend-system",     "name": "친구 추가 시스템 및 네트워킹",        "status": "completed" },
+    { "dir": "4-stopwatch",         "name": "코어 기능 - 실시간 스톱워치",         "status": "completed" },
+    { "dir": "5-notifications-qa",  "name": "알림 & 질문 채팅 & 통계",            "status": "completed" },
+    { "dir": "5-5-home-ui-items",   "name": "홈 화면 UI 개선 & 아이템 API",       "status": "completed" },
+    { "dir": "6-room-invitations",  "name": "그룹 초대 시스템",                   "status": "completed" },
+    { "dir": "6-5-profile-modal",   "name": "프로필 모달 & 로그아웃",              "status": "completed" },
+    { "dir": "7-monetization",      "name": "수익화",                            "status": "completed" },
+    { "dir": "7-5-room-ux",         "name": "방 UX 개선 & 스톱워치 서버 동기화",  "status": "completed" },
+    { "dir": "7-8-admin-content",   "name": "어드민 콘텐츠 관리",                 "status": "completed" },
+    { "dir": "8-1-store-registration", "name": "스토어 상품 등록 (수동)",          "status": "pending" },
+    { "dir": "8-2-iap-server",      "name": "서버 영수증 검증 실제 구현",          "status": "pending" },
+    { "dir": "8-3-iap-app",         "name": "앱 IAP 라이브러리 교체",             "status": "pending" }
+  ]
+}

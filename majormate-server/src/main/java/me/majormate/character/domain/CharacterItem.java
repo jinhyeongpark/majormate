@@ -34,6 +34,10 @@ public class CharacterItem {
     private String filePath;
 
     @Column(nullable = false)
+    @Builder.Default
+    private boolean isStarter = false;
+
+    @Column(nullable = false)
     private Instant createdAt;
 
     @Column(nullable = false)
@@ -50,10 +54,11 @@ public class CharacterItem {
         this.updatedAt = Instant.now();
     }
 
-    public void update(ItemCategory category, String name, int price, String filePath) {
+    public void update(ItemCategory category, String name, int price, String filePath, boolean isStarter) {
         if (category != null) this.category = category;
         if (name != null)     this.name = name;
         if (price >= 0)       this.price = price;
         if (filePath != null) this.filePath = filePath;
+        this.isStarter = isStarter;
     }
 }
