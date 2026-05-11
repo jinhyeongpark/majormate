@@ -49,6 +49,7 @@ public class SecurityConfig {
                     "/api/majors",
                     "/api/auth/google",
                     "/api/items",
+                    "/api/points/iap/webhook",
                     "/assets/characters/**"
                 ).permitAll()
                 .anyRequest().authenticated()

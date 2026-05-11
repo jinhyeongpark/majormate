@@ -4,6 +4,8 @@ import me.majormate.character.dto.CharacterResponse;
 import me.majormate.character.service.CharacterService;
 import me.majormate.common.exception.BadRequestException;
 import me.majormate.major.service.MajorService;
+import me.majormate.point.service.UserPointService;
+import me.majormate.room.service.RoomService;
 import me.majormate.user.domain.Gender;
 import me.majormate.user.domain.User;
 import me.majormate.user.dto.ProfileResponse;
@@ -37,6 +39,12 @@ class UserServiceTest {
 
     @Mock
     MajorService majorService;
+
+    @Mock
+    UserPointService userPointService;
+
+    @Mock
+    RoomService roomService;
 
     @InjectMocks
     UserService userService;

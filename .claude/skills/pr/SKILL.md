@@ -106,9 +106,10 @@ This repo uses `Phase N: <한국어 설명>` — **not** the commit-style `type(
 Phase N: <변경 내용을 한국어로 간결하게>
 ```
 
-- `N` = **항상** `gh pr list --state all --json number,title` 로 이전 PR 제목을 확인하고, 마지막으로 사용된 Phase 번호 + 1을 사용한다. `implementation_plan.md` 체크박스만으로 판단하지 않는다.
+- `N` = **항상** `gh pr list --state all --json number,title` 로 이전 PR 제목을 확인하고, 마지막으로 사용된 Phase 번호 + 1을 사용한다.
+- ⚠️ 커밋 메시지나 `implementation_plan.md`의 Phase 번호(예: 7.5, 6.5)를 그대로 쓰지 않는다. PR 번호는 항상 순차 정수다.
 - 설명은 한국어, 구체적으로, 70자 이내
-- 예: `Phase 4: 캐릭터 아이템 관리 API, 친구 시스템 및 앱 UI 구현`
+- 예: 직전 PR이 `Phase 13: ...`이면 다음은 `Phase 14: ...`
 
 ### Body
 - Summary: 2–4 bullets covering what changed and why.

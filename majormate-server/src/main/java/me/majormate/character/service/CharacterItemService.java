@@ -57,12 +57,6 @@ public class CharacterItemService {
     }
 
     private CharacterItemResponse toResponse(CharacterItem item) {
-        return new CharacterItemResponse(
-                item.getId(),
-                item.getCategory(),
-                item.getName(),
-                item.getPrice(),
-                assetUrlService.toUrl(item.getFilePath())
-        );
+        return CharacterItemResponse.from(item, assetUrlService.toUrl(item.getFilePath()), false);
     }
 }

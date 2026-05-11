@@ -65,6 +65,6 @@ src/
 
 ## 참고 문서
 
-- PRD: `../PRD.md` — 전체 기능 명세 및 UX 플로우
+- PRD: `../docs/PRD.md` — 전체 기능 명세 및 UX 플로우
 - 로드맵: `../implementation_plan.md` — 페이즈별 태스크 목록
 - API 명세: `../majormate-server/docs/api/openapi.json`
