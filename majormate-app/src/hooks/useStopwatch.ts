@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { syncStopwatchStart, syncStopwatchPause, syncStopwatchResume, syncStopwatchEnd } from '../api/stopwatch';
 
 export type StopwatchStatus = 'idle' | 'running' | 'paused';
 
@@ -19,22 +20,26 @@ export function useStopwatch() {
   const start = () => {
     startTimeRef.current = Date.now();
     setStatus('running');
+    syncStopwatchStart().catch(() => {});
   };
 
   const pause = () => {
     accumulatedRef.current += Date.now() - startTimeRef.current!;
     setStatus('paused');
+    syncStopwatchPause().catch(() => {});
   };
 
   const resume = () => {
     startTimeRef.current = Date.now();
     setStatus('running');
+    syncStopwatchResume().catch(() => {});
   };
 
   const end = () => {
     accumulatedRef.current = 0;
     setElapsedMs(0);
     setStatus('idle');
+    syncStopwatchEnd().catch(() => {});
   };
 
   return { status, elapsedMs, start, pause, resume, end };

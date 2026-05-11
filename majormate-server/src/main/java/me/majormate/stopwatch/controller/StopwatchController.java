@@ -10,7 +10,9 @@ import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.annotation.SendToUser;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
@@ -54,7 +56,15 @@ public class StopwatchController {
     }
 
     private User resolve(Principal principal) {
-        OAuth2AuthenticationToken auth = (OAuth2AuthenticationToken) principal;
-        return userService.getByEmail(auth.getPrincipal().getAttribute("email"));
+        String email;
+        if (principal instanceof OAuth2AuthenticationToken auth) {
+            email = auth.getPrincipal().getAttribute("email");
+        } else if (principal instanceof UsernamePasswordAuthenticationToken auth
+                   && auth.getPrincipal() instanceof OAuth2User oauth2User) {
+            email = oauth2User.getAttribute("email");
+        } else {
+            throw new IllegalStateException("Unsupported principal: " + principal.getClass());
+        }
+        return userService.getByEmail(email);
     }
 }

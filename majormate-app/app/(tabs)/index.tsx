@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Image,
@@ -14,20 +15,18 @@ import CharacterRenderer, { CharacterLayers } from '../../components/CharacterRe
 import FriendsPanel from '../../components/FriendsPanel';
 import ProfileModal from '../../components/ProfileModal';
 import RoomsPanel from '../../components/RoomsPanel';
-import RoomView from '../../components/RoomView';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useAuth } from '../../src/auth/AuthContext';
 import { apiClient } from '../../src/api/client';
 import { registerFcmToken } from '../../src/api/notifications';
 import { tokenStorage } from '../../src/auth/tokenStorage';
-import { RoomSummary } from '../../src/api/rooms';
 import { formatElapsed, useStopwatch } from '../../src/hooks/useStopwatch';
 
 const ICON_GROUPS = require('../../assets/icons/groups_icon.png');
 const ICON_ADD_FRIEND = require('../../assets/icons/add_friend_icon.png');
 const BUBBLE = require('../../assets/icons/sentence.png');
 
-type Panel = 'none' | 'friends' | 'rooms' | 'room';
+type Panel = 'none' | 'friends' | 'rooms';
 
 const SPEECHES: Record<string, string[]> = {
   idle: ['ready?', "let's go!", 'focus up!', 'grind time!', 'tick tock!', 'start now!'],
@@ -75,9 +74,9 @@ function PixelButton({
 }
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { setAuthenticated } = useAuth();
   const [panel, setPanel] = useState<Panel>('none');
-  const [currentRoom, setCurrentRoom] = useState<RoomSummary | null>(null);
   const [character, setCharacter] = useState<CharacterLayers>({ gender: 'male' });
   const [nickname, setNickname] = useState<string | null>(null);
   const [major, setMajor] = useState<string | null>(null);
@@ -104,18 +103,7 @@ export default function HomeScreen() {
   }, []);
 
   const toggleOverlay = (target: 'friends' | 'rooms') => {
-    if (panel === 'room') return;
     setPanel((p) => (p === target ? 'none' : target));
-  };
-
-  const handleEnterRoom = (room: RoomSummary) => {
-    setCurrentRoom(room);
-    setPanel('room');
-  };
-
-  const handleLeaveRoom = () => {
-    setCurrentRoom(null);
-    setPanel('none');
   };
 
   const handleLogout = async () => {
@@ -159,22 +147,22 @@ export default function HomeScreen() {
         ) : panel === 'rooms' ? (
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setPanel('none')}>
             <Pressable onPress={(e) => e.stopPropagation()} style={styles.panelWrapper}>
-              <RoomsPanel onEnterRoom={handleEnterRoom} onClose={() => setPanel('none')} />
+              <RoomsPanel onClose={() => setPanel('none')} />
             </Pressable>
           </Pressable>
-        ) : panel === 'room' && currentRoom ? (
-          <View style={styles.panelWrapper}>
-            <RoomView room={currentRoom} onLeave={handleLeaveRoom} />
-          </View>
         ) : (
           <View style={styles.characterArea}>
-            <View style={styles.characterWrapper}>
+            <TouchableOpacity
+              style={styles.characterWrapper}
+              onPress={() => router.push('/character-setup')}
+              activeOpacity={0.85}
+            >
               <ImageBackground source={BUBBLE} style={styles.speechBubble} resizeMode="stretch">
                 <Text numberOfLines={1} style={styles.speechText}>{speech}</Text>
               </ImageBackground>
               {/* TODO(Phase 5): 공부 시작 시 캐릭터 장착 악세서리(노트북/커피) 모션 연출 */}
               <CharacterRenderer layers={character} size={200} />
-            </View>
+            </TouchableOpacity>
             <TouchableOpacity onPress={() => setProfileVisible(true)} hitSlop={8}>
               <Text style={styles.nickname}>{nickname ?? '---'}</Text>
             </TouchableOpacity>

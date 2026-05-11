@@ -15,6 +15,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -49,6 +51,12 @@ public class UserController {
             @RequestBody CharacterUpdateRequest req) {
         User user = resolve(oAuth2User);
         return ResponseEntity.ok(characterService.updateCharacter(user, req));
+    }
+
+    @GetMapping("/{userId}/character")
+    public ResponseEntity<CharacterResponse> getUserCharacter(@PathVariable UUID userId) {
+        User user = userService.getById(userId);
+        return ResponseEntity.ok(characterService.getCharacter(user));
     }
 
     @PostMapping("/me/fcm-token")

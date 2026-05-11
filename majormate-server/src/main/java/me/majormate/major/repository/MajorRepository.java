@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MajorRepository extends JpaRepository<Major, Long> {
     boolean existsByNameKo(String nameKo);
+    java.util.Optional<Major> findByNameKo(String nameKo);
 }
