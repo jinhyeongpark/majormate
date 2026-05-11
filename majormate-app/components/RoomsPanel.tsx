@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -18,13 +19,13 @@ import CreateRoomModal from './CreateRoomModal';
 import RoomInvitationsView from './RoomInvitationsView';
 
 interface Props {
-  onEnterRoom: (room: RoomSummary) => void;
   onClose: () => void;
 }
 
 type Tab = 'rooms' | 'invitations';
 
-export default function RoomsPanel({ onEnterRoom, onClose }: Props) {
+export default function RoomsPanel({ onClose }: Props) {
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>('rooms');
   const [rooms, setRooms] = useState<RoomSummary[]>([]);
   const [invitations, setInvitations] = useState<RoomInvitation[]>([]);
@@ -115,7 +116,7 @@ export default function RoomsPanel({ onEnterRoom, onClose }: Props) {
           {majorRoom && (
             <>
               <Text style={styles.sectionLabel}>MAJOR</Text>
-              <RoomItem room={majorRoom} onPress={() => onEnterRoom(majorRoom)} showLeave={false} />
+              <RoomItem room={majorRoom} onPress={() => router.push(`/room/${majorRoom.id}`)} showLeave={false} />
             </>
           )}
 
@@ -128,7 +129,7 @@ export default function RoomsPanel({ onEnterRoom, onClose }: Props) {
               <RoomItem
                 key={room.id}
                 room={room}
-                onPress={() => onEnterRoom(room)}
+                onPress={() => router.push(`/room/${room.id}`)}
                 showLeave
                 onLeave={() => handleLeave(room.id)}
               />

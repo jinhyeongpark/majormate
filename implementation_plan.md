@@ -304,16 +304,128 @@ PRD.md에 파악된 철학과 핵심 기술 스택을 바탕으로 백엔드와 
 
 > Phase 6 완료 후 착수.
 
-- [ ] **백엔드 작업 지시**
+- [x] **백엔드 작업 지시**
   - 사용자 포인트(Point) 관리 엔티티 및 보유량 조회/업데이트 API 구현.
   - 인앱 결제(IAP)를 통한 포인트 충전 비즈니스 로직 및 영수증 검증 Webhook 수신 엔드포인트 구현 (1000원: 1000P, 5000원: 5500P, 10000원: 12000P).
   - 사용자 아이템 소유권(보유 여부) 관리 엔티티 구현 및 아이템 구매 API 개발 (잔여 포인트 확인, 차감 및 소유권 부여 트랜잭션).
-- [ ] **프론트엔드 작업 지시**
+- [x] **프론트엔드 작업 지시**
   - 홈 화면의 내 캐릭터 터치 시 '캐릭터 커스텀 화면'으로 이동하는 라우팅 추가.
   - 캐릭터 커스텀 화면 상단에 현재 보유 포인트(Point) 표시 및 포인트 충전소 진입 버튼/모달 구현 (포인트 충전 패키지 3종 제공).
   - 아이템 상점/인벤토리 렌더링 시 내가 가지지 못한(미보유) 아이템에 대해 약간의 블러 처리 및 자물쇠 아이콘(도트/픽셀 스타일) 노출.
   - 자물쇠가 있는 아이템 클릭 시 아이템 이미지, 이름, 가격이 표시되는 구매 확인 팝업 모달 노출 및 결제(포인트 차감) 플로우 연결.
   - 아이템 구매 완료 시 즉시 장착 처리되며, 착용된 아이템에는 체크 표시가 뜨고 캐릭터 렌더링에 실시간 반영.
+
+---
+
+### Phase 7.5: 방(Room) UX 개선 & 스톱워치 서버 동기화
+
+> Phase 7 완료 후 착수. 이 세션에서 구현.
+
+#### 완료된 작업
+
+- [x] **버그 수정: rooms.ts 인증 문제**
+  - `src/api/rooms.ts`의 모든 함수가 raw `fetch` + `credentials: 'include'`(쿠키 방식)를 사용해 JWT 인증이 되지 않아 항상 빈 방 목록 반환.
+  - 전체 함수를 `apiClient`(Bearer 토큰 자동 첨부) 기반으로 교체. `fetchMyRooms`, `fetchRoom`, `joinRoom`, `leaveRoom`, `createRoom`, `createCustomRoom`, `inviteToRoom`, `fetchReceivedInvitations`, `acceptInvitation`, `declineInvitation` 전부 수정.
+
+- [x] **전공방 이름 형식 변경** — `{한국어 전공명} Study Room` → `{영어 전공명} Room`
+  - `MajorRepository`에 `findByNameKo` 추가.
+  - `RoomService.getOrCreateMajorRoom()` 에서 `nameEn + " Room"` 형태로 방 이름 생성.
+  - `V14__rename_major_rooms.sql` 마이그레이션으로 기존 MAJOR 방 이름 일괄 업데이트 (`rooms JOIN majors ON major = name_ko`).
+
+- [x] **방 화면 풀스크린 전환**
+  - 방 클릭 시 오버레이 패널 → 전체화면 라우트(`app/room/[roomId].tsx`) 전환으로 변경.
+  - `_layout.tsx`에 `room/[roomId]` Stack 라우트 등록.
+  - `RoomsPanel`에서 `onEnterRoom` prop 제거, `router.push('/room/${room.id}')` 직접 호출.
+  - `index.tsx`에서 `'room'` 패널 상태 및 `currentRoom` 관련 코드 제거.
+  - 멤버 카드 레이아웃: 시간(위) → 아바타(중) → 닉네임(아래). MAJOR 방은 LEAVE 버튼 숨김.
+
+- [x] **스톱워치 서버 동기화**
+  - `StopwatchRestController` 신규: `POST /api/stopwatch/start|pause|resume|end` (JWT Bearer 인증).
+  - `start`에서 `roomId: null` 시 서버가 유저의 전공방으로 자동 해석.
+  - `StopwatchController.resolve()` — `OAuth2AuthenticationToken` 하드캐스팅 → JWT(`UsernamePasswordAuthenticationToken`) 도 처리하도록 수정.
+  - 앱 `useStopwatch` 훅: START/PAUSE/RESUME/END 각각 서버 REST 호출 추가 (fire-and-forget).
+  - 방 화면 폴링 30초 → 5초로 단축.
+
+- [x] **방 멤버 캐릭터 표시 (Map 캐시)**
+  - `GET /api/users/{userId}/character` 신규 엔드포인트 (다른 유저 캐릭터 조회).
+  - `UserService.getById(UUID)` 추가.
+  - 앱 방 화면: `useRef<Map<string, CharacterLayers>>` 캐시 — 처음 등장한 userId만 `fetchUserCharacter()` 호출, 이후 5초 폴링에서 재요청 없음.
+  - 캐릭터 존재 시 `CharacterRenderer size={60}`, 없으면 원형 이니셜 placeholder fallback.
+
+#### 미해결 (다음 세션에서 이어서 진행)
+
+> [!WARNING]
+> **방 화면에서 내 캐릭터 이미지가 렌더링되지 않는 문제**
+>
+> **증상**: 방에 입장 시 내 카드가 원형 이니셜 placeholder로 표시되고 실제 픽셀 캐릭터가 나타나지 않음.
+>
+> **의심 원인 후보**:
+> 1. `FlatList extraData={tick}`만 지정되어 있어, `characters` Map state 업데이트 시 FlatList 아이템이 리렌더되지 않을 수 있음 → `extraData={[tick, characters]}` 로 수정 필요.
+> 2. `CharacterRenderer size={60}`이 너무 작아 base body 이미지(`male/default.png`)가 보이지 않거나, 원격 이미지 URL fetch 실패.
+> 3. `GET /api/users/{userId}/character` 응답이 정상이지만 `CharacterLayers` 타입 매핑 오류.
+>
+> **다음 시도 후보**:
+> - `extraData` 수정 후 재테스트.
+> - 캐릭터 fetch 성공 여부 `console.log`로 확인.
+> - `CharacterRenderer` size를 80 이상으로 올려서 테스트.
+
+---
+
+### Phase 8: 스토어 등록 및 IAP 실제 연동
+
+> Phase 7 완료 후, 앱 출시 준비 시점에 착수. 스토어 등록(8.1) → 서버 영수증 검증(8.2) → 앱 IAP 교체(8.3) 순서 필수.
+
+#### Phase 8.1: 스토어 상품 등록 (수동 작업)
+
+> ⏸ 수동 개입 구간 — 개발자 계정 및 외부 서비스 설정 필요.
+
+- [ ] **Google Play Console**
+  - 앱 등록 및 패키지명(`com.majormate`) 확인.
+  - 인앱 상품 생성 (관리형 제품):
+    - `points_1000` — 1,000원
+    - `points_5000` — 5,000원
+    - `points_10000` — 10,000원
+  - Google Play Developer API 활성화 → 서비스 계정 생성 → JSON 키 파일 발급.
+  - 서비스 계정에 Google Play Console 재무 데이터 접근 권한 부여.
+
+- [ ] **App Store Connect**
+  - 앱 등록 및 번들 ID 확인.
+  - 인앱 구매 상품 생성 (소모성):
+    - `points_1000` — ₩1,000 (Tier 1)
+    - `points_5000` — ₩5,000 (Tier 5)
+    - `points_10000` — ₩10,000 (Tier 10)
+  - App Store Connect API 키 발급 (Issuer ID, Key ID, `.p8` 파일).
+  - App Store Server Notifications v2 Webhook URL 등록: `POST /api/points/iap/webhook` 서버 주소.
+
+---
+
+#### Phase 8.2: 서버 — 영수증 검증 실제 구현
+
+> Phase 8.1 완료 후 착수. 스토어 자격증명 필요.
+
+- [ ] **백엔드 작업 지시**
+  - `application-secret.yaml`에 스토어 자격증명 추가:
+    - `google.play.service-account-key-path` (JSON 키 파일 경로)
+    - `apple.appstore.issuer-id`, `apple.appstore.key-id`, `apple.appstore.private-key` (`.p8` 내용)
+  - `UserPointService.validateReceipt()` 실제 구현:
+    - **Android**: Google Play Developer API `purchases.products.get` 호출 → `purchaseState == 0` (완료) 검증 → 중복 처리 방지 (`orderId` 기록).
+    - **iOS**: App Store Server API `POST /inApps/v1/verifyReceipt` 호출 → `status == 0` 검증 → `transactionId` 기록으로 중복 방지.
+  - `IapTransaction` 엔티티 추가: `orderId/transactionId`, `productId`, `userId`, `processedAt` — 중복 충전 방지용 유니크 제약.
+  - App Store Server Notifications v2 수신 처리: `POST /api/points/iap/webhook` 엔드포인트를 Apple JWS 페이로드 파싱 방식으로 확장.
+
+---
+
+#### Phase 8.3: 앱 — IAP 라이브러리 교체
+
+> Phase 8.1 완료 후 착수 (서버와 병렬 진행 가능).
+
+- [ ] **프론트엔드 작업 지시**
+  - `react-native-iap` 설치 및 네이티브 설정 (Android: `build.gradle` billing 의존성, iOS: StoreKit 프레임워크 링크).
+  - `components/TopUpModal.tsx` 스텁 코드 교체:
+    - `RNIap.initConnection()` → `RNIap.requestPurchase(productId)` → `purchaseUpdatedListener`에서 영수증(`receiptData` 또는 JWS) 수신.
+    - 영수증 수신 후 서버 `POST /api/points/iap/webhook`으로 전달 → 성공 시 `RNIap.finishTransaction()` 호출.
+    - 네트워크 오류 시 영수증을 로컬 저장(`AsyncStorage`) 후 다음 앱 실행 시 재처리.
+  - 결제 복원(`RNIap.getAvailablePurchases()`) 기능 추가 — 앱 재설치 후 구매 복원 지원.
 
 ---
 

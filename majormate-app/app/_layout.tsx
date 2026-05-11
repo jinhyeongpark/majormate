@@ -94,6 +94,7 @@ export default function RootLayout() {
         <Stack.Screen name="character-setup" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="qa/chat/[chatRoomId]" />
+        <Stack.Screen name="room/[roomId]" />
       </Stack>
     </AuthContext.Provider>
   );

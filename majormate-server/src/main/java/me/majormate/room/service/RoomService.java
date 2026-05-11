@@ -5,6 +5,7 @@ import me.majormate.common.exception.BadRequestException;
 import me.majormate.common.exception.EntityNotFoundException;
 import me.majormate.common.exception.ForbiddenException;
 import me.majormate.friend.repository.FriendshipRepository;
+import me.majormate.major.repository.MajorRepository;
 import me.majormate.room.domain.*;
 import me.majormate.room.dto.*;
 import me.majormate.room.repository.RoomInvitationRepository;
@@ -33,6 +34,7 @@ public class RoomService {
     private final RoomInvitationRepository roomInvitationRepository;
     private final FriendshipRepository friendshipRepository;
     private final UserRepository userRepository;
+    private final MajorRepository majorRepository;
     private final SessionStateService sessionStateService;
     private final SimpMessagingTemplate messagingTemplate;
 
@@ -181,11 +183,16 @@ public class RoomService {
     @Transactional
     public Room getOrCreateMajorRoom(String major) {
         return roomRepository.findByTypeAndMajor(RoomType.MAJOR, major)
-                .orElseGet(() -> roomRepository.save(Room.builder()
-                        .name(major + " Study Room")
-                        .type(RoomType.MAJOR)
-                        .major(major)
-                        .build()));
+                .orElseGet(() -> {
+                    String nameEn = majorRepository.findByNameKo(major)
+                            .map(m -> m.getNameEn())
+                            .orElse(major);
+                    return roomRepository.save(Room.builder()
+                            .name(nameEn + " Room")
+                            .type(RoomType.MAJOR)
+                            .major(major)
+                            .build());
+                });
     }
 
     @Transactional
