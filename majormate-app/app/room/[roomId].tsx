@@ -63,7 +63,7 @@ function MemberCard({ member, onAskQuestion, character }: MemberCardProps) {
         {offline ? '--:--' : formatMs(elapsed)}
       </Text>
       {character ? (
-        <CharacterRenderer layers={character} size={60} />
+        <CharacterRenderer layers={character} size={80} />
       ) : (
         <View style={[styles.avatar, { borderColor }]}>
           <Text style={styles.avatarText}>
@@ -207,7 +207,7 @@ export default function RoomScreen() {
             />
           )}
           showsVerticalScrollIndicator={false}
-          extraData={tick}
+          extraData={[tick, characters]}
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.grid}
         />
