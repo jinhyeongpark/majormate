@@ -43,7 +43,13 @@
       "Bash(chmod +x /c/Users/jinhy/Projects/majormate/.githooks/pre-commit)",
       "Bash(git -C /c/Users/jinhy/Projects/majormate config core.hooksPath .githooks)",
       "Bash(git -C /c/Users/jinhy/Projects/majormate config core.hooksPath)",
-      "Bash(echo \"hooksPath: $\\(git -C /c/Users/jinhy/Projects/majormate config core.hooksPath\\)\")"
+      "Bash(echo \"hooksPath: $\\(git -C /c/Users/jinhy/Projects/majormate config core.hooksPath\\)\")",
+      "PowerShell(Get-Content *)",
+      "PowerShell(& \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\" pair 192.168.1.101:40705 354074)",
+      "PowerShell(& \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\" connect 192.168.1.101:37633)",
+      "PowerShell($adb = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; & $adb reverse tcp:8082 tcp:8082; & $adb reverse tcp:8081 tcp:8081)",
+      "PowerShell(& \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\" devices)",
+      "PowerShell($adb = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; & $adb -s 192.168.1.101:37633 reverse tcp:8082 tcp:8082; & $adb -s 192.168.1.101:37633 reverse tcp:8081 tcp:8081)"
     ]
   }
 }
