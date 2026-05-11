@@ -49,7 +49,11 @@
       "PowerShell(& \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\" connect 192.168.1.101:37633)",
       "PowerShell($adb = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; & $adb reverse tcp:8082 tcp:8082; & $adb reverse tcp:8081 tcp:8081)",
       "PowerShell(& \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\" devices)",
-      "PowerShell($adb = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; & $adb -s 192.168.1.101:37633 reverse tcp:8082 tcp:8082; & $adb -s 192.168.1.101:37633 reverse tcp:8081 tcp:8081)"
+      "PowerShell($adb = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; & $adb -s 192.168.1.101:37633 reverse tcp:8082 tcp:8082; & $adb -s 192.168.1.101:37633 reverse tcp:8081 tcp:8081)",
+      "PowerShell(Head *)",
+      "Bash(Select-Object FullName)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill /PID 61708 /F)"
     ]
   }
 }

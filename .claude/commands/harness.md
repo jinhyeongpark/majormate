@@ -1,4 +1,4 @@
-이 프로젝트는 Harness 프레임워크를 사용한다. `implementation_plan.md`를 기반으로 step 파일을 설계하고 `execute.py`로 자동 실행한다.
+이 프로젝트는 Harness 프레임워크를 사용한다. `phases/` 디렉터리를 기반으로 step 파일을 설계하고 `execute.py`로 자동 실행한다.
 
 ---
 
@@ -15,31 +15,44 @@
 
 아래 파일들을 읽고 프로젝트 맥락을 파악한다:
 
-- `implementation_plan.md` — 전체 페이즈·태스크 목록 및 체크박스 상태
+- `phases/index.json` — 전체 phase 목록 및 상태
+- `phases/{N}/spec.md` — 해당 phase 기획 명세 및 태스크
+- `phases/{N}/index.json` — 해당 phase step 실행 현황
 - `docs/PRD.md` — 기획·UX 의도
 - `majormate-server/CLAUDE.md` — 서버 패키지 구조·컨벤션
 - `majormate-app/CLAUDE.md` — 앱 구조·컨벤션
-- `phases/index.json` — 이미 실행된 harness phase 현황 (존재하는 경우)
 
 ### B. 진행률 대시보드 (인수 없이 호출 시)
 
-`implementation_plan.md`의 체크박스와 `phases/index.json`을 읽어 현황을 출력한다:
+`phases/index.json`과 각 `phases/{N}/index.json`을 읽어 현황을 출력한다:
 
 ```
-Phase 7: 수익화              [3/4 done]  ⬛⬛⬛⬜   phases/7-monetization: completed
-Phase 8: 소셜 기능           [0/3 done]  ⬜⬜⬜     phases/8-social: pending
-Phase 9: 통계 고도화         [0/2 done]  ⬜⬜       (미설계)
+Phase 7:   수익화                    [completed]  phases/7-monetization
+Phase 7.5: 방 UX 개선               [completed]  phases/7-5-room-ux
+Phase 7.8: 어드민 콘텐츠 관리        [completed]  phases/7-8-admin-content
+Phase 8.1: 스토어 상품 등록 (수동)   [pending]    phases/8-1-store-registration
+Phase 8.2: 서버 영수증 검증          [0/? done]   phases/8-2-iap-server
+Phase 8.3: 앱 IAP 라이브러리 교체   [0/? done]   phases/8-3-iap-app
 ```
 
 출력 후: "어떤 Phase를 설계할까요? (번호 입력)"
 
-### C. 논의
+### C. 새 Phase 기획 (신규 기능 추가 시)
+
+사용자가 기존 phase 목록에 없는 새 기능을 요청하면:
+
+1. `phases/index.json`에 새 항목 추가
+2. `phases/{N}/spec.md` 신규 생성 — 기능 개요 + 태스크 목록 작성
+3. `phases/{N}/index.json` 신규 생성 — `{ "status": "pending", "steps": [] }`
+4. Step 설계 진행 (아래 D, E 단계)
+
+### D. 논의
 
 구현 전 기술적으로 결정해야 할 사항이 있으면 사용자에게 제시하고 논의한다. 질문은 1개씩만 한다.
 
-### D. Step 설계
+### E. Step 설계
 
-`implementation_plan.md`의 해당 Phase 태스크를 step으로 변환하는 초안을 작성해 피드백을 요청한다.
+`phases/{phase-name}/spec.md`의 해당 Phase 태스크를 step으로 변환하는 초안을 작성해 피드백을 요청한다.
 
 **태스크 → step 분류 규칙:**
 
@@ -63,11 +76,11 @@ Phase 9: 통계 고도화         [0/2 done]  ⬜⬜       (미설계)
 6. **주의사항은 구체적으로** — "X를 하지 마라. 이유: Y" 형식.
 7. **네이밍** — kebab-case slug (예: `db-migration`, `point-service-test`, `point-service-impl`).
 
-### E. 파일 생성
+### F. 파일 생성
 
 사용자가 승인하면 아래 파일들을 생성한다.
 
-#### E-1. `phases/index.json`
+#### F-1. `phases/index.json`
 
 이미 존재하면 `phases` 배열에 새 항목만 추가한다.
 
@@ -75,14 +88,15 @@ Phase 9: 통계 고도화         [0/2 done]  ⬜⬜       (미설계)
 {
   "phases": [
     {
-      "dir": "8-social",
+      "dir": "8-2-iap-server",
+      "name": "서버 영수증 검증 실제 구현",
       "status": "pending"
     }
   ]
 }
 ```
 
-#### E-2. `phases/{phase-name}/index.json`
+#### F-2. `phases/{phase-name}/index.json`
 
 ```json
 {
@@ -106,7 +120,7 @@ Phase 9: 통계 고도화         [0/2 done]  ⬜⬜       (미설계)
 | → `error` | `failed_at`, `error_message` | Claude (message), execute.py (timestamp) |
 | → `blocked` | `blocked_at`, `blocked_reason` | Claude (reason), execute.py (timestamp) |
 
-#### E-3. `phases/{phase-name}/step{N}.md`
+#### F-3. `phases/{phase-name}/step{N}.md`
 
 **서비스 테스트 step 템플릿** (`test-agent` 호출):
 
@@ -117,7 +131,7 @@ Phase 9: 통계 고도화         [0/2 done]  ⬜⬜       (미설계)
 
 - `CLAUDE.md`
 - `majormate-server/CLAUDE.md`
-- `implementation_plan.md` — Phase {N} 관련 태스크
+- `phases/{phase-name}/spec.md` — Phase 기획 명세
 - {이전 step에서 생성된 도메인/DTO 파일}
 
 ## 작업
@@ -165,6 +179,7 @@ cd majormate-server && ./gradlew test --tests "me.majormate.{domain}.service.{Se
 
 - `CLAUDE.md`
 - `majormate-server/CLAUDE.md`
+- `phases/{phase-name}/spec.md` — Phase 기획 명세
 - {이전 test step에서 작성된 테스트 파일 경로}
 - {관련 도메인/DTO/Repository 파일}
 
@@ -188,7 +203,7 @@ cd majormate-server && ./gradlew test --tests "me.majormate.{domain}.service.{Se
 ## 검증 절차
 
 1. AC 커맨드 실행 → GREEN 확인.
-2. `implementation_plan.md`에서 해당 태스크 체크박스를 `- [x]`로 업데이트한다.
+2. `phases/{phase-name}/spec.md`에서 해당 태스크 체크박스를 `- [x]`로 업데이트한다.
 3. `phases/{phase-name}/index.json` 해당 step 업데이트:
    - GREEN → `"status": "completed"`, `"summary": "구현 파일: {경로}"`
    - 실패 → `"status": "error"`, `"error_message": "{에러}"`
@@ -209,6 +224,7 @@ cd majormate-server && ./gradlew test --tests "me.majormate.{domain}.service.{Se
 - `CLAUDE.md`
 - `majormate-app/CLAUDE.md`
 - `docs/PRD.md` — 해당 화면 UX 명세
+- `phases/{phase-name}/spec.md` — Phase 기획 명세
 - {이전 server step의 API 엔드포인트·DTO 정보}
 
 ## 작업
@@ -231,7 +247,7 @@ cd majormate-app && npx tsc --noEmit
 ## 검증 절차
 
 1. AC 커맨드 실행 → 타입 에러 없음 확인.
-2. `implementation_plan.md`에서 해당 태스크 체크박스를 `- [x]`로 업데이트한다.
+2. `phases/{phase-name}/spec.md`에서 해당 태스크 체크박스를 `- [x]`로 업데이트한다.
 3. `phases/{phase-name}/index.json` 해당 step 업데이트.
 
 ## 금지사항
@@ -239,7 +255,7 @@ cd majormate-app && npx tsc --noEmit
 - 서버 코드를 수정하지 마라. 이유: 이 step은 앱만 담당한다.
 ```
 
-### F. 실행
+### G. 실행
 
 ```bash
 python3 scripts/execute.py {phase-name}        # 순차 실행
