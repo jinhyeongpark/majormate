@@ -44,7 +44,7 @@ public class CharacterItemService {
     public CharacterItemResponse updateItem(UUID id, CharacterItemRequest req) {
         CharacterItem item = characterItemRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("아이템을 찾을 수 없습니다: " + id));
-        item.update(req.category(), req.name(), req.price(), req.filePath());
+        item.update(req.category(), req.name(), req.price(), req.filePath(), false);
         return toResponse(characterItemRepository.save(item));
     }
 

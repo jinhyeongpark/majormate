@@ -350,6 +350,40 @@
         }
       }
     },
+    "/api/admin/items": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "캐릭터 아이템 등록 — 파일 업로드 (Admin, multipart/form-data)",
+        "operationId": "createItemWithFile",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file", "name", "price", "category"],
+                "properties": {
+                  "file":      { "type": "string", "format": "binary", "description": "아이템 이미지 파일 (PNG 등)" },
+                  "name":      { "type": "string" },
+                  "price":     { "type": "integer", "description": "음수면 0으로 보정" },
+                  "category":  { "$ref": "#/components/schemas/ItemCategory" },
+                  "isStarter": { "type": "boolean", "default": false, "description": "스타터 아이템 여부" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "등록된 아이템",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CharacterItemResponse" } } }
+          },
+          "400": { "description": "파일이 없거나 비어있음" },
+          "403": { "description": "관리자 권한 없음" }
+        }
+      }
+    },
     "/api/admin/character-items/{id}": {
       "put": {
         "tags": ["Admin"],
@@ -785,12 +819,13 @@
       "CharacterItemResponse": {
         "type": "object",
         "properties": {
-          "id":       { "type": "string", "format": "uuid" },
-          "category": { "$ref": "#/components/schemas/ItemCategory" },
-          "name":     { "type": "string" },
-          "price":    { "type": "integer" },
-          "filePath": { "type": "string", "format": "uri", "description": "CloudFront 전체 URL (예: https://cdn.majormate.com/hair/001.png)" },
-          "owned":    { "type": "boolean", "description": "인증된 사용자가 이미 보유한 아이템이면 true. 미인증 시 항상 false." }
+          "id":        { "type": "string", "format": "uuid" },
+          "category":  { "$ref": "#/components/schemas/ItemCategory" },
+          "name":      { "type": "string" },
+          "price":     { "type": "integer" },
+          "filePath":  { "type": "string", "format": "uri", "description": "CloudFront 전체 URL (예: https://cdn.majormate.com/hair/001.png)" },
+          "owned":     { "type": "boolean", "description": "인증된 사용자가 이미 보유한 아이템이면 true. 미인증 시 항상 false." },
+          "isStarter": { "type": "boolean", "description": "스타터 아이템 여부 (가입 시 무료 지급)" }
         }
       },
       "PointsResponse": {

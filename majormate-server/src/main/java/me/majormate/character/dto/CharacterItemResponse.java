@@ -11,7 +11,8 @@ public record CharacterItemResponse(
         String name,
         int price,
         String filePath,
-        boolean owned
+        boolean owned,
+        boolean isStarter
 ) {
     public static CharacterItemResponse from(CharacterItem item, String fileUrl, boolean owned) {
         return new CharacterItemResponse(
@@ -20,7 +21,8 @@ public record CharacterItemResponse(
                 item.getName(),
                 item.getPrice(),
                 fileUrl,
-                owned
+                owned,
+                item.isStarter()
         );
     }
 }

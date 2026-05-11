@@ -52,6 +52,7 @@ public class SecurityConfig {
                     "/api/points/iap/webhook",
                     "/assets/characters/**"
                 ).permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2

@@ -1,5 +1,6 @@
 package me.majormate.auth.jwt;
 
+import me.majormate.user.domain.UserRole;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -15,23 +16,21 @@ import java.util.Map;
 public class JwtPrincipal implements OAuth2User {
 
     private final Map<String, Object> attributes;
+    private final UserRole role;
 
-    public JwtPrincipal(String email) {
+    public JwtPrincipal(String email, UserRole role) {
         this.attributes = Map.of("email", email);
-    }
-
-    @Override
-    public Map<String, Object> getAttributes() {
-        return attributes;
+        this.role = role;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
-    public String getName() {
-        return (String) attributes.get("email");
-    }
+    public Map<String, Object> getAttributes() { return attributes; }
+
+    @Override
+    public String getName() { return (String) attributes.get("email"); }
 }
