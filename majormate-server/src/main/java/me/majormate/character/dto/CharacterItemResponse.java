@@ -10,15 +10,17 @@ public record CharacterItemResponse(
         ItemCategory category,
         String name,
         int price,
-        String filePath
+        String filePath,
+        boolean owned
 ) {
-    public static CharacterItemResponse from(CharacterItem item) {
+    public static CharacterItemResponse from(CharacterItem item, String fileUrl, boolean owned) {
         return new CharacterItemResponse(
                 item.getId(),
                 item.getCategory(),
                 item.getName(),
                 item.getPrice(),
-                item.getFilePath()
+                fileUrl,
+                owned
         );
     }
 }

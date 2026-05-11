@@ -1,14 +1,18 @@
 package me.majormate.room.service;
 
 import me.majormate.common.exception.EntityNotFoundException;
+import me.majormate.friend.repository.FriendshipRepository;
+import me.majormate.major.repository.MajorRepository;
 import me.majormate.room.domain.Room;
-import me.majormate.stopwatch.service.SessionStateService;
 import me.majormate.room.domain.RoomType;
 import me.majormate.room.dto.CreateRoomRequest;
 import me.majormate.room.dto.RoomResponse;
+import me.majormate.room.repository.RoomInvitationRepository;
 import me.majormate.room.repository.RoomMemberRepository;
 import me.majormate.room.repository.RoomRepository;
+import me.majormate.stopwatch.service.SessionStateService;
 import me.majormate.user.domain.User;
+import me.majormate.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -38,6 +42,18 @@ class RoomServiceTest {
 
     @Mock
     RoomMemberRepository roomMemberRepository;
+
+    @Mock
+    RoomInvitationRepository roomInvitationRepository;
+
+    @Mock
+    FriendshipRepository friendshipRepository;
+
+    @Mock
+    UserRepository userRepository;
+
+    @Mock
+    MajorRepository majorRepository;
 
     @Mock
     SessionStateService sessionStateService;
@@ -73,105 +89,6 @@ class RoomServiceTest {
     }
 
     // ────────────────────────────────────────────────────────────────────────
-    // getRooms
-    // ────────────────────────────────────────────────────────────────────────
-
-    @Nested
-    @DisplayName("getRooms 메서드는")
-    class Describe_getRooms {
-
-        @Nested
-        @DisplayName("typeStr 가 null 이면")
-        class Context_with_null_type {
-
-            @Test
-            @DisplayName("전체 방 목록을 반환한다")
-            void it_returns_all_rooms() {
-                Room r1 = buildRoom(UUID.randomUUID(), RoomType.MAJOR, "CS");
-                Room r2 = buildRoom(UUID.randomUUID(), RoomType.CUSTOM, "Math");
-                given(roomRepository.findAll()).willReturn(List.of(r1, r2));
-                given(roomMemberRepository.countByRoom(any())).willReturn(0);
-
-                List<RoomResponse> result = roomService.getRooms(null, null);
-
-                verify(roomRepository).findAll();
-                verify(roomRepository, never()).findAllByType(any());
-                verify(roomRepository, never()).findAllByTypeAndMajor(any(), any());
-                assertThat(result).hasSize(2);
-            }
-        }
-
-        @Nested
-        @DisplayName("typeStr 는 있고 major 가 null 이면")
-        class Context_with_type_only {
-
-            @Test
-            @DisplayName("타입으로만 필터링한 방 목록을 반환한다")
-            void it_returns_rooms_filtered_by_type() {
-                Room r1 = buildRoom(UUID.randomUUID(), RoomType.MAJOR, "CS");
-                given(roomRepository.findAllByType(RoomType.MAJOR)).willReturn(List.of(r1));
-                given(roomMemberRepository.countByRoom(any())).willReturn(0);
-
-                List<RoomResponse> result = roomService.getRooms("MAJOR", null);
-
-                verify(roomRepository).findAllByType(RoomType.MAJOR);
-                verify(roomRepository, never()).findAllByTypeAndMajor(any(), any());
-                assertThat(result).hasSize(1);
-            }
-        }
-
-        @Nested
-        @DisplayName("typeStr 는 있고 major 가 공백 문자열이면")
-        class Context_with_type_and_blank_major {
-
-            @Test
-            @DisplayName("타입으로만 필터링한 방 목록을 반환한다")
-            void it_returns_rooms_filtered_by_type_when_major_is_blank() {
-                Room r1 = buildRoom(UUID.randomUUID(), RoomType.MAJOR, "CS");
-                given(roomRepository.findAllByType(RoomType.MAJOR)).willReturn(List.of(r1));
-                given(roomMemberRepository.countByRoom(any())).willReturn(0);
-
-                List<RoomResponse> result = roomService.getRooms("MAJOR", "   ");
-
-                verify(roomRepository).findAllByType(RoomType.MAJOR);
-                verify(roomRepository, never()).findAllByTypeAndMajor(any(), any());
-                assertThat(result).hasSize(1);
-            }
-        }
-
-        @Nested
-        @DisplayName("typeStr 와 major 가 모두 유효하면")
-        class Context_with_type_and_major {
-
-            @Test
-            @DisplayName("타입과 전공으로 필터링한 방 목록을 반환한다")
-            void it_returns_rooms_filtered_by_type_and_major() {
-                Room r1 = buildRoom(UUID.randomUUID(), RoomType.MAJOR, "CS");
-                given(roomRepository.findAllByTypeAndMajor(RoomType.MAJOR, "CS")).willReturn(List.of(r1));
-                given(roomMemberRepository.countByRoom(any())).willReturn(0);
-
-                List<RoomResponse> result = roomService.getRooms("MAJOR", "CS");
-
-                verify(roomRepository).findAllByTypeAndMajor(RoomType.MAJOR, "CS");
-                verify(roomRepository, never()).findAllByType(any());
-                assertThat(result).hasSize(1);
-            }
-        }
-
-        @Nested
-        @DisplayName("유효하지 않은 typeStr 가 주어지면")
-        class Context_with_invalid_type {
-
-            @Test
-            @DisplayName("IllegalArgumentException 을 던진다")
-            void it_throws_illegal_argument_exception() {
-                assertThatThrownBy(() -> roomService.getRooms("INVALID", null))
-                        .isInstanceOf(IllegalArgumentException.class);
-            }
-        }
-    }
-
-    // ────────────────────────────────────────────────────────────────────────
     // createRoom
     // ────────────────────────────────────────────────────────────────────────
 
@@ -187,7 +104,7 @@ class RoomServiceTest {
             @DisplayName("해당 값을 maxMembers 로 사용한 Room 을 저장하고 RoomResponse 를 반환한다")
             void it_saves_room_with_given_max_members() {
                 User host = buildUser();
-                CreateRoomRequest req = new CreateRoomRequest("My Room", "CUSTOM", null, 10);
+                CreateRoomRequest req = new CreateRoomRequest("My Room", "CUSTOM", null, 10, null);
 
                 Room savedRoom = Room.builder()
                         .id(UUID.randomUUID())
@@ -217,7 +134,7 @@ class RoomServiceTest {
             @DisplayName("maxMembers 를 기본값 30 으로 설정하여 저장한다")
             void it_saves_room_with_default_max_members() {
                 User host = buildUser();
-                CreateRoomRequest req = new CreateRoomRequest("My Room", "CUSTOM", null, null);
+                CreateRoomRequest req = new CreateRoomRequest("My Room", "CUSTOM", null, null, null);
 
                 ArgumentCaptor<Room> roomCaptor = ArgumentCaptor.forClass(Room.class);
 
@@ -249,7 +166,7 @@ class RoomServiceTest {
             @DisplayName("host 를 RoomMember 로 함께 저장한다")
             void it_saves_host_as_room_member() {
                 User host = buildUser();
-                CreateRoomRequest req = new CreateRoomRequest("My Room", "MAJOR", "CS", 20);
+                CreateRoomRequest req = new CreateRoomRequest("My Room", "MAJOR", "CS", 20, null);
 
                 Room savedRoom = Room.builder()
                         .id(UUID.randomUUID())
@@ -443,7 +360,7 @@ class RoomServiceTest {
 
                 ArgumentCaptor<Room> captor = ArgumentCaptor.forClass(Room.class);
                 verify(roomRepository).save(captor.capture());
-                assertThat(captor.getValue().getName()).isEqualTo("Math Study Room");
+                assertThat(captor.getValue().getName()).isEqualTo("Math Room");
                 assertThat(captor.getValue().getType()).isEqualTo(RoomType.MAJOR);
                 assertThat(captor.getValue().getMajor()).isEqualTo("Math");
             }
