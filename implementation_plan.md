@@ -352,22 +352,11 @@ PRD.md에 파악된 철학과 핵심 기술 스택을 바탕으로 백엔드와 
   - 앱 방 화면: `useRef<Map<string, CharacterLayers>>` 캐시 — 처음 등장한 userId만 `fetchUserCharacter()` 호출, 이후 5초 폴링에서 재요청 없음.
   - 캐릭터 존재 시 `CharacterRenderer size={60}`, 없으면 원형 이니셜 placeholder fallback.
 
-#### 미해결 (다음 세션에서 이어서 진행)
+#### 미해결 → 해결 완료
 
-> [!WARNING]
-> **방 화면에서 내 캐릭터 이미지가 렌더링되지 않는 문제**
->
-> **증상**: 방에 입장 시 내 카드가 원형 이니셜 placeholder로 표시되고 실제 픽셀 캐릭터가 나타나지 않음.
->
-> **의심 원인 후보**:
-> 1. `FlatList extraData={tick}`만 지정되어 있어, `characters` Map state 업데이트 시 FlatList 아이템이 리렌더되지 않을 수 있음 → `extraData={[tick, characters]}` 로 수정 필요.
-> 2. `CharacterRenderer size={60}`이 너무 작아 base body 이미지(`male/default.png`)가 보이지 않거나, 원격 이미지 URL fetch 실패.
-> 3. `GET /api/users/{userId}/character` 응답이 정상이지만 `CharacterLayers` 타입 매핑 오류.
->
-> **다음 시도 후보**:
-> - `extraData` 수정 후 재테스트.
-> - 캐릭터 fetch 성공 여부 `console.log`로 확인.
-> - `CharacterRenderer` size를 80 이상으로 올려서 테스트.
+- [x] **방 화면 캐릭터 렌더링 버그 수정**
+  - `FlatList extraData={tick}` → `extraData={[tick, characters]}` 로 수정. `characters` Map 업데이트 시 즉시 리렌더되지 않던 문제 해결.
+  - `CharacterRenderer size={60}` → `size={80}` 으로 확대.
 
 ---
 
